@@ -123,6 +123,23 @@ def train(config):
 
 
 def test(config):
+    """
+    This function should take the model we want to test ie probably the best model 
+    and return different metrics (presumably accuracy and F1-Score but it could also return precision, recall etc to make the analysis of the results easier)
+    it should also create a .csv file with this format : 
+    imgname, label 
+    0.jpg, 1 
+    1.jpg, 10 
+    ...
+    121427.jpg, 37
+
+    The name of the file is still to be discussed but we can imagine taking the jobid of the slurm submission
+    """
+    logging = config["logging"]
+    logdir = logging["logdir"]
+    model_name = config["test"]["model_name"]
+
+    
     raise NotImplementedError
 
 

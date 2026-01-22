@@ -23,6 +23,3 @@ logging:
 model:
   class: VanillaCNN
   num_layers : 4
-
-test:
-  model_name: "best_model.pt"

@@ -32,10 +32,9 @@ def get_dataloaders(data_config, use_cuda):
         [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
     )
 
-    base_dataset = torchvision.datasets.Caltech101(
+    base_dataset = torchvision.datasets.ImageFolder(
         root=data_config["trainpath"],
-        download=True,
-        transform=input_transform,
+        transform=input_transform
     )
 
     logging.info(f"  - I loaded {len(base_dataset)} samples")
@@ -70,3 +69,14 @@ def get_dataloaders(data_config, use_cuda):
     input_size = tuple(base_dataset[0][0].shape)
 
     return train_loader, valid_loader, input_size, num_classes
+
+def get_test_dataloaders(data_config, use_cuda): 
+
+    # Build the dataloaders
+    test_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=use_cuda,
+    )
