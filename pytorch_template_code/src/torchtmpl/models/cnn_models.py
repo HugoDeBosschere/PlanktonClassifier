@@ -44,3 +44,24 @@ def VanillaCNN(cfg, input_size, num_classes):
     num_features = reduce(operator.mul, out_cnn.shape[1:], 1)
     out_layers = [nn.Flatten(start_dim=1), nn.Linear(num_features, num_classes)]
     return nn.Sequential(conv_model, *out_layers)
+
+def PollenNet(cfg, input_size, num_classes):
+
+    layers = []
+    cin = input_size[0]
+    for k in range(1,5):
+        cout = 2**(k + 4)
+        layers.extend(conv_relu_bn(cin, cout))
+        layers.extend(nn.MaxPool2d())
+        if k != 1:
+            layers.extend(nn.Dropout(0.5))
+
+        cin = cout 
+    
+    layers.extend(nn.Flatten())
+    layers.extend(nn.Linear(512, 512))
+    layers.extend(nn.ReLU())
+    layers.extend(nn.Droupout(0.5))
+    layers.extend(nn.Linear(512, num_classes))
+    
+    return nn.Sequential(*layers)

@@ -11,6 +11,7 @@ import yaml
 import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
+import tqdm
 
 # Local imports
 from . import data
@@ -125,9 +126,6 @@ def train(config):
 def test(config):
     """
     This function should take the model we want to test ie probably the best model 
-    and return different metrics (presumably accuracy and F1-Score but it could also return precision, recall etc to make the analysis of the results easier)
-    it should also create a .csv file with this format : 
-    imgname, label 
     0.jpg, 1 
     1.jpg, 10 
     ...
@@ -135,15 +133,41 @@ def test(config):
 
     The name of the file is still to be discussed but we can imagine taking the jobid of the slurm submission
     """
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda") if use_cuda else torch.device("cpu")
+    print(f"Device used {device}")
+
     logging = config["logging"]
     logdir = logging["logdir"]
     model_name = config["test"]["model_name"]
+    save_dir = config["test"]["save_dir"]
+    save_path = config["model"]["class"]
+    unique_save_path = utils.generate_unique_csv(save_dir,save_path)
 
+    test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda)
     
-    raise NotImplementedError
+    cfg_model = config["model"]
+
+    model = models.cnn_models.VanillaCNN(cfg_model ,input_size,num_classes)
+    model.load_state_dict(torch.load(model_name, weights_only=True))
+
+
+    with open(unique_save_path,"w") as file:
+        model.eval()
+        i = 0
+        file.write("imgname,label \n")
+        for img, _ in tqdm.tqdm(test_loader):
+            logits = model(img)
+            preds = torch.argmax(logits,dim=1) 
+            for e in preds:
+                file.write(f"{i}.jpg, {e} \n")
+                i += 1
+    return None
+
 
 
 if __name__ == "__main__":
+
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
     if len(sys.argv) != 3:

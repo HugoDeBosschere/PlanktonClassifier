@@ -27,6 +27,23 @@ def generate_unique_logpath(logdir, raw_run_name):
             return log_path
         i = i + 1
 
+def generate_unique_csv(logdir, raw_run_name):
+    """
+    Generate a unique directory name
+    Argument:
+        logdir: the prefix directory
+        raw_run_name(str): the base name
+    Returns:
+        log_path: a non-existent path like logdir/raw_run_name_xxxx
+                  where xxxx is an int
+    """
+    i = 0
+    while True:
+        run_name = raw_run_name + "_" + str(i)
+        log_path = os.path.join(logdir, run_name + ".csv")
+        if not os.path.isdir(log_path):
+            return log_path
+        i = i + 1
 
 class ModelCheckpoint(object):
     """
@@ -76,6 +93,7 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
     The averaged train metrics computed over a sliding window
     """
 
+    print(f"We are currently using {device}")
     # We enter train mode.
     # This is important for layers such as dropout, batchnorm, ...
     model.train()

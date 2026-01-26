@@ -31,6 +31,7 @@ def get_dataloaders(data_config, use_cuda):
     input_transform = transforms.Compose(
         [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
     )
+    print("Hello before Caltech")
 
     base_dataset = torchvision.datasets.ImageFolder(
         root=data_config["trainpath"],
@@ -65,18 +66,38 @@ def get_dataloaders(data_config, use_cuda):
         pin_memory=use_cuda,
     )
 
-    num_classes = len(base_dataset.categories)
+    num_classes = len(base_dataset.classes)
     input_size = tuple(base_dataset[0][0].shape)
 
     return train_loader, valid_loader, input_size, num_classes
 
-def get_test_dataloaders(data_config, use_cuda): 
+def get_test_dataloaders(config, use_cuda): 
+
+    data_config = config['data']
+    batch_size = data_config['batch_size']
+    num_workers = data_config['num_workers']
+    test_path = data_config['testpath']
+
+    input_transform = transforms.Compose(
+        [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+    )
+
+    test_dataset = torchvision.datasets.ImageFolder(
+        root=test_path,
+        transform = input_transform
+    )
 
     # Build the dataloaders
     test_loader = torch.utils.data.DataLoader(
-        train_dataset,
+        test_dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
         pin_memory=use_cuda,
     )
+
+    num_classes = len(test_dataset.classes)
+    input_size = tuple(test_dataset[0][0].shape)
+    print(input_size)
+
+    return test_loader, input_size, 86

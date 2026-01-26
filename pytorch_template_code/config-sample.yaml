@@ -2,11 +2,11 @@ data:
   trainpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
   testpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
   batch_size: 256
-  num_workers: 4
+  num_workers: 8
   valid_ratio: 0.2
 
 optim:
-  algo: SGD
+  algo: AdamW
   params:
     lr: 0.01
 
@@ -25,4 +25,5 @@ model:
   num_layers : 4
 
 test:
-  model_name: "best_model.pt"
+  model_name: "./logs/VanillaCNN_2/best_model.pt"
+  save_dir: "./test"
