@@ -1,16 +1,17 @@
 data:
   trainpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
   testpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
-  batch_size: 256
+  batch_size: 64
   num_workers: 8
   valid_ratio: 0.2
 
 optim:
   algo: AdamW
   params:
-    lr: 0.01
+    lr: 0.001
+    
 
-nepochs: 20
+nepochs: 10
 loss: "CrossEntropyLoss"
 
 logging:
@@ -21,9 +22,12 @@ logging:
 # model:
 #   class: Linear
 model:
-  class: VanillaCNN
+  class: PollenNet
   num_layers : 4
+  prob_droupout : 0.5
+  old_model_path : "./logs/PollenNet_15/best_model.pt" #if not None, the parameters are going to be ignored
+                                                      #and the model in old_model_path will be loaded and improved
 
 test:
-  model_name: "./logs/VanillaCNN_2/best_model.pt"
+  model_name: "./logs/PollenNet_15/best_model.pt"
   save_dir: "./test"

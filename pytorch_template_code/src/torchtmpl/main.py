@@ -5,6 +5,7 @@ import logging
 import sys
 import os
 import pathlib
+import subprocess
 
 # External imports
 import yaml
@@ -21,8 +22,10 @@ from . import utils
 
 
 def train(config):
+    print("Debut du train")
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
+    print(f"We are using {device} for training")
 
     if "wandb" in config["logging"]:
         wandb_config = config["logging"]["wandb"]
@@ -45,6 +48,8 @@ def train(config):
     logging.info("= Model")
     model_config = config["model"]
     model = models.build_model(model_config, input_size, num_classes)
+    if "old_model_path" in model_config:
+        model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
     model.to(device)
 
     # Build the loss
@@ -123,7 +128,10 @@ def train(config):
             wandb_log(metrics)
 
 
-def test(config):
+def send_kaggle(filepath):
+    subprocess.run(f"kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
+
+def test(config,send_kaggle_bool=True):
     """
     This function should take the model we want to test ie probably the best model 
     0.jpg, 1 
@@ -140,6 +148,7 @@ def test(config):
     logging = config["logging"]
     logdir = logging["logdir"]
     model_name = config["test"]["model_name"]
+    print(f"We are currently testing the model at {model_name}")
     save_dir = config["test"]["save_dir"]
     save_path = config["model"]["class"]
     unique_save_path = utils.generate_unique_csv(save_dir,save_path)
@@ -148,12 +157,13 @@ def test(config):
     
     cfg_model = config["model"]
 
-    model = models.cnn_models.VanillaCNN(cfg_model ,input_size,num_classes)
+    model = models.cnn_models.PollenNet(cfg_model ,input_size,num_classes)
     model.load_state_dict(torch.load(model_name, weights_only=True))
 
 
     with open(unique_save_path,"w") as file:
         model.eval()
+        print(f"fichier crée à l'adresse : {unique_save_path}")
         i = 0
         file.write("imgname,label \n")
         for img, _ in tqdm.tqdm(test_loader):
@@ -162,12 +172,14 @@ def test(config):
             for e in preds:
                 file.write(f"{i}.jpg, {e} \n")
                 i += 1
+    if send_kaggle_bool:
+        send_kaggle(unique_save_path)
     return None
 
 
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
     if len(sys.argv) != 3:

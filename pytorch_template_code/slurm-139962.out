@@ -1,0 +1,2 @@
+hello world
+slurmstepd: error: *** JOB 139962 ON sh01 CANCELLED AT 2026-01-27T05:08:38 DUE TO TIME LIMIT ***

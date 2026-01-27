@@ -29,19 +29,21 @@ def generate_unique_logpath(logdir, raw_run_name):
 
 def generate_unique_csv(logdir, raw_run_name):
     """
-    Generate a unique directory name
+    Generate a unique csv name 
     Argument:
         logdir: the prefix directory
         raw_run_name(str): the base name
     Returns:
-        log_path: a non-existent path like logdir/raw_run_name_xxxx
+        log_path: a non-existent path like logdir/raw_run_name_xxxx.csv
                   where xxxx is an int
     """
     i = 0
+    print("coucou")
     while True:
         run_name = raw_run_name + "_" + str(i)
         log_path = os.path.join(logdir, run_name + ".csv")
-        if not os.path.isdir(log_path):
+        if not os.path.isfile(log_path):
+            print(f"log_path renvoyé : {log_path}")
             return log_path
         i = i + 1
 
@@ -119,6 +121,7 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
         total_loss += inputs.shape[0] * loss.item()
         num_samples += inputs.shape[0]
         pbar.set_description(f"Train loss : {total_loss/num_samples:.2f}")
+        
 
     return total_loss / num_samples
 

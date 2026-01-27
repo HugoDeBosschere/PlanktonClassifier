@@ -31,7 +31,6 @@ def get_dataloaders(data_config, use_cuda):
     input_transform = transforms.Compose(
         [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
     )
-    print("Hello before Caltech")
 
     base_dataset = torchvision.datasets.ImageFolder(
         root=data_config["trainpath"],
