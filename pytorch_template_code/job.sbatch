@@ -3,10 +3,11 @@
 #SBATCH --job-name=templatecode
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
-#SBATCH --time=2:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --array=1-1
+#SBATCH --exclude=sh[00,10-19]
 
 current_dir=`pwd`
 export PATH=$PATH:~/.local/bin

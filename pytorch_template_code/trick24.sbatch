@@ -4,7 +4,7 @@
 #SBATCH --nodes=1                                                                                                                            
 #SBATCH --partition=gpu_prod_long                                                                                                                   
 #SBATCH --time=24:00:00                                                                                                                              
-                                                                                                                      
+#SBATCH --exclude=sh[00,10-19]                                                                                                          
  
 echo "hello world"
 while true
