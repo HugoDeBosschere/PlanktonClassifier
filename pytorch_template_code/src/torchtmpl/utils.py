@@ -102,7 +102,10 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
 
     total_loss = 0
     num_samples = 0
-    for i, (inputs, targets) in (pbar := tqdm.tqdm(enumerate(loader))):
+
+    len_dataset = len(loader)
+
+    for i, (inputs, targets) in (pbar := tqdm.tqdm(enumerate(loader),total= len_dataset)):
 
         inputs, targets = inputs.to(device), targets.to(device)
 

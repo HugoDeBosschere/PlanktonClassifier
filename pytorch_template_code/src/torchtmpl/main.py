@@ -5,7 +5,8 @@ import logging
 import sys
 import os
 import pathlib
-import subprocess
+import subprocess # To be able to send the results directly to kaggle 
+import datetime # To enrich the log files and now when the training was launched
 
 # External imports
 import yaml
@@ -145,20 +146,19 @@ def test(config,send_kaggle_bool=True):
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"Device used {device}")
 
-    logging = config["logging"]
-    logdir = logging["logdir"]
+
     model_name = config["test"]["model_name"]
-    print(f"We are currently testing the model at {model_name}")
+    model_path = config["test"]["model_path"]
+    print(f"We are currently testing the model at {model_path}")
     save_dir = config["test"]["save_dir"]
-    save_path = config["model"]["class"]
-    unique_save_path = utils.generate_unique_csv(save_dir,save_path)
+    unique_save_path = utils.generate_unique_csv(save_dir,model_name)
 
     test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda)
     
-    cfg_model = config["model"]
+    model_config = config["model"]
 
-    model = models.cnn_models.PollenNet(cfg_model ,input_size,num_classes)
-    model.load_state_dict(torch.load(model_name, weights_only=True))
+    model = models.cnn_models.PollenNet(model_config ,input_size,num_classes)
+    model.load_state_dict(torch.load(model_path, weights_only=True))
 
 
     with open(unique_save_path,"w") as file:

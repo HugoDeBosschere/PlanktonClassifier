@@ -3,8 +3,8 @@
 #SBATCH --job-name=9training                                                                                                                        
 #SBATCH --nodes=1                                                                                                                            
 #SBATCH --partition=gpu_prod_long                                                                                                                   
-#SBATCH --time=12:00:00                                                                                                                              
-#SBATCH --exclude=sh[00,10-19]                                                                                                                      
+#SBATCH --time=24:00:00                                                                                                                              
+                                                                                                                      
  
 echo "hello world"
 while true
