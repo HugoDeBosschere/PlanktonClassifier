@@ -15,16 +15,16 @@ nepochs: 200
 loss: "CrossEntropyLoss"
 
 logging:
-  # wandb: 
-  #   project: sample_project
-  #   entity: sample_entity
+  wandb: 
+    project: WinningKaggle
+    entity: hugo-debosschere-are-na
   logdir: "./logs"  # Better to provide the fullpath, especially on the cluster
 # model:
 #   class: Linear
 model:
   class: PollenNet
-  num_layers: 6
-  size_linear : 1024
+  num_layers: 4
+  size_linear : 256
   prob_droupout : 0.5
   #old_model_path : "./logs/PollenNet_20/best_model.pt" #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
