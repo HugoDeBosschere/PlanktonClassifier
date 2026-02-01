@@ -29,12 +29,12 @@ cd $TMPDIR/code
 #git checkout 388074fa8530adadf5e17d48650a162cf788d183
 
 
-echo "Setting up the virtual environment"
-python3 -m venv venv
-source venv/bin/activate
+echo "Not Setting up the virtual environment (maybe my conda environment will suffice)"
+#python3 -m venv venv
+#source venv/bin/activate
 
 # Install the library
-python -m pip install .
+python -m pip install -e .
 
 echo "Training"
 python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-sample.yaml train
