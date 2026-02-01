@@ -1,6 +1,6 @@
 #!/bin/bash                                                                                                                                         
  
-#SBATCH --job-name=9training                                                                                                                        
+#SBATCH --job-name=interactive                                                                                                                       
 #SBATCH --nodes=1                                                                                                                            
 #SBATCH --partition=gpu_prod_long                                                                                                                   
 #SBATCH --time=12:00:00                                                                                                                              

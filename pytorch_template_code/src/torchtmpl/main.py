@@ -33,6 +33,7 @@ def train(config):
         wandb.init(project=wandb_config["project"], entity=wandb_config["entity"])
         wandb_log = wandb.log
         wandb_log(config)
+        
         logging.info(f"Will be recording in wandb run name : {wandb.run.name}")
     else:
         wandb_log = None
@@ -55,13 +56,13 @@ def train(config):
 
     # Build the loss
     logging.info("= Loss")
-    loss = optim.get_loss(config["loss"])
+    loss = optim.get_weighted_loss(config["loss"], config["data"]["trainpath"],device )
 
     # Build the optimizer
     logging.info("= Optimizer")
     optim_config = config["optim"]
     optimizer = optim.get_optimizer(optim_config, model.parameters())
-
+    logging.info(f"We are running the latest code ! Yay !")
     # Build the callbacks
     logging_config = config["logging"]
     # Let us use as base logname the class name of the modek
@@ -69,11 +70,14 @@ def train(config):
     logdir = utils.generate_unique_logpath(logging_config["logdir"], logname)
     if not os.path.isdir(logdir):
         os.makedirs(logdir)
-    logging.info(f"Will be logging into {logdir}")
+        logging.info(f"created a logdir at {logdir}")
+
+    logging.info(f"Will be logging into {os.path.abspath(logdir)}")
 
     # Copy the config file into the logdir
     logdir = pathlib.Path(logdir)
     with open(logdir / "config.yaml", "w") as file:
+        ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
         yaml.dump(config, file)
 
     # Make a summary script of the experiment
@@ -122,6 +126,12 @@ def train(config):
             )
         )
 
+        if updated:
+            logging.info(f"We are logging an artifact !")
+            artifact = wandb.Artifact(name="best-model",type ="model",metadata={"loss" : loss, "epoch" : e})
+            artifact.add_file(model_checkpoint.savepath)
+            wandb.log_artifact(artifact)
+
         # Update the dashboard
         metrics = {"train_CE": train_loss, "test_CE": test_loss}
         if wandb_log is not None:
@@ -147,7 +157,7 @@ def test(config,send_kaggle_bool=True):
     print(f"Device used {device}")
 
 
-    model_name = config["test"]["model_name"]
+    model_name = config["model"]["class"]
     model_path = config["test"]["model_path"]
     print(f"We are currently testing the model at {model_path}")
     save_dir = config["test"]["save_dir"]
@@ -180,6 +190,7 @@ def test(config,send_kaggle_bool=True):
 
 
 if __name__ == "__main__":
+    
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
     if len(sys.argv) != 3:
@@ -188,6 +199,14 @@ if __name__ == "__main__":
 
     logging.info("Loading {}".format(sys.argv[1]))
     config = yaml.safe_load(open(sys.argv[1], "r"))
-
     command = sys.argv[2]
     eval(f"{command}(config)")
+    
+    """
+    sweep_configuration = sys.argv[2]
+     # Initialize the sweep by passing in the config dictionary
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project=args.project)
+
+    # Start the sweep job
+    wandb.agent(sweep_id, function=train, count=4)
+    """

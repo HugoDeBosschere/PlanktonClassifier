@@ -2,6 +2,7 @@
 
 # Standard imports
 import os
+import pathlib 
 
 # External imports
 import torch
@@ -22,8 +23,10 @@ def generate_unique_logpath(logdir, raw_run_name):
     i = 0
     while True:
         run_name = raw_run_name + "_" + str(i)
-        log_path = os.path.join(logdir, run_name)
+        log_path = Path(logdir)
+        log_path = os.path.join(os.path.expanduser(logdir), run_name)
         if not os.path.isdir(log_path):
+            logging.info(f"Le log_path retenu est le suivant : {log_path}")
             return log_path
         i = i + 1
 
@@ -46,6 +49,9 @@ def generate_unique_csv(logdir, raw_run_name):
             print(f"log_path renvoyé : {log_path}")
             return log_path
         i = i + 1
+
+
+
 
 class ModelCheckpoint(object):
     """
@@ -78,7 +84,6 @@ class ModelCheckpoint(object):
             self.best_score = score
             return True
         return False
-
 
 def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
     """

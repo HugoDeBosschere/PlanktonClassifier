@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.utils.data
 import torchvision
 from torchvision import transforms
-
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -21,12 +21,32 @@ def show_image(X):
     plt.show()
 
 def get_batch_weighted_uniform_sampler(num_classes, batch_size,len_dataset):
+    """
+    I let this here to see the work that has been done but this function should not be used 
+    as it has a terrible caveat which made all the training up until now useless. 
+    The weights argument of the WeightedRandomSampler should be of size n_sample and not of 
+    size n_classes, which lead the model to believe that the dataset was only num_classes images long
+    """
     unif_proba = 1/num_classes
     weights = [unif_proba for i in range(num_classes)]
-    print(f"taille de la liste {len(weights)} \n et contenu de la liste : {weights}")
+    #print(f"taille de la liste {len(weights)} \n et contenu de la liste : {weights}")
     Wrs = torch.utils.data.WeightedRandomSampler(weights,len_dataset,replacement=True)
     b_sampler = torch.utils.data.BatchSampler(Wrs, batch_size,drop_last=False)
     return b_sampler
+
+def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset):
+    """
+    Maybe using the batch sampler is not the right idea yet since I am not doing data augmentation
+    """
+    classes = np.array(base_dataset.targets) 
+    nb_sample_per_classes = np.bincounts(classes)
+    print(nb_sample_per_classes)
+    weights_per_classes = 1 / nb_sample_per_classes
+    weights_samples = weights_per_classes[base_dataset.targets]
+    Wrs = torch.utils.data.WeightedRandomSampler(weights,len_dataset,replacement=True)
+    b_sampler = torch.utils.data.BatchSampler(Wrs, batch_size, drop_last=False)
+    return b_sampler
+
 
 def get_dataloaders(data_config, use_cuda):
     valid_ratio = data_config["valid_ratio"]
@@ -57,13 +77,14 @@ def get_dataloaders(data_config, use_cuda):
 
     num_classes = len(base_dataset.classes)
     len_dataset = len(base_dataset)
+
     # Build the sampler
-    b_sampler = get_batch_weighted_uniform_sampler(num_classes=num_classes,batch_size=batch_size,len_dataset=len_dataset)
+    #b_sampler = get_batch_weighted_smart_sampler(base_dataset=base_dataset,batch_size=batch_size,len_dataset=len_dataset)
 
     # Build the dataloaders
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_sampler=b_sampler,
+        shuffle=True,
         num_workers=num_workers,
         pin_memory=use_cuda,
     )
@@ -71,7 +92,7 @@ def get_dataloaders(data_config, use_cuda):
 
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,
-        batch_sampler=b_sampler,
+        shuffle = False,
         num_workers=num_workers,
         pin_memory=use_cuda,
     )

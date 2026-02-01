@@ -11,20 +11,20 @@ optim:
     lr: 0.001
     
 
-nepochs: 200
+nepochs: 50
 loss: "CrossEntropyLoss"
 
 logging:
   wandb: 
     project: WinningKaggle
     entity: hugo-debosschere-are-na
-  logdir: "./logs"  # Better to provide the fullpath, especially on the cluster
+  logdir: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
 # model:
 #   class: Linear
 model:
-  class: PollenNet
-  num_layers: 4
-  size_linear : 256
+  class: VanillaCNN
+  num_layers: 1
+  size_linear : 1024
   prob_droupout : 0.5
   #old_model_path : "./logs/PollenNet_20/best_model.pt" #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
