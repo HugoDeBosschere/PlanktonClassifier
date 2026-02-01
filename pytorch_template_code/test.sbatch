@@ -11,6 +11,7 @@
  
 
 
+current_dir="pwd"
 export PATH=$PATH:~/.local/bin
 
 echo "Session " ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}
@@ -23,7 +24,7 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs $HOME/DeepLearning/pytorch_template_code/ $TMPDIR/code
 
-echo "Checking out the correct version of the code commit_id 388074fa8530adadf5e17d48650a162cf788d183"
+#echo "Checking out the correct version of the code commit_id 388074fa8530adadf5e17d48650a162cf788d183"
 cd $TMPDIR/code
 #git checkout 388074fa8530adadf5e17d48650a162cf788d183
 
@@ -36,8 +37,8 @@ echo "Not Setting up the virtual environment (maybe my conda environment will su
 # Note hugo : I think that the -e is very important because if you don't put it, you risk running an old version of the code 
 python -m pip install -e .
 
-echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-sample.yaml train
+echo "Testing"
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-sample.yaml test
 
 if [[ $? != 0 ]]; then
     exit -1

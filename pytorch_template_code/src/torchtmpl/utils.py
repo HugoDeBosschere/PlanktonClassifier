@@ -2,12 +2,13 @@
 
 # Standard imports
 import os
-import pathlib 
+
 
 # External imports
 import torch
 import torch.nn
 import tqdm
+#import time 
 
 
 def generate_unique_logpath(logdir, raw_run_name):
@@ -23,10 +24,8 @@ def generate_unique_logpath(logdir, raw_run_name):
     i = 0
     while True:
         run_name = raw_run_name + "_" + str(i)
-        log_path = Path(logdir)
         log_path = os.path.join(os.path.expanduser(logdir), run_name)
         if not os.path.isdir(log_path):
-            logging.info(f"Le log_path retenu est le suivant : {log_path}")
             return log_path
         i = i + 1
 
@@ -41,7 +40,6 @@ def generate_unique_csv(logdir, raw_run_name):
                   where xxxx is an int
     """
     i = 0
-    print("coucou")
     while True:
         run_name = raw_run_name + "_" + str(i)
         log_path = os.path.join(logdir, run_name + ".csv")
@@ -85,7 +83,7 @@ class ModelCheckpoint(object):
             return True
         return False
 
-def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
+def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512):
     """
     Train a model for one epoch, iterating over the loader
     using the f_loss to compute the loss and the optimizer
@@ -110,9 +108,15 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
 
     len_dataset = len(loader)
 
-    for i, (inputs, targets) in (pbar := tqdm.tqdm(enumerate(loader),total= len_dataset)):
+    if dynamic_display:
+        pbar = tqdm.tqdm(enumerate(loader),total= len_dataset)
+    else:
+        pbar = enumerate(loader)
 
-        inputs, targets = inputs.to(device), targets.to(device)
+    #time_beginning_minibatch = time.time()
+    for i, (inputs, targets) in pbar:
+        
+        inputs, targets = inputs.to(device,non_blocking = True), targets.to(device,non_blocking = True)
 
         # Compute the forward propagation
         outputs = model(inputs)
@@ -126,14 +130,20 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
 
         # Update the metrics
         # We here consider the loss is batch normalized
-        total_loss += inputs.shape[0] * loss.item()
+        total_loss += inputs.shape[0] * loss.detach()
         num_samples += inputs.shape[0]
-        pbar.set_description(f"Train loss : {total_loss/num_samples:.2f}")
-        
+        if dynamic_display:
+            pbar.set_description(f"Train loss : {loss/num_samples:.2f}")
+        if not dynamic_display and (i%100) == 0 and i != 0:
+            #time_end_minibatch = time.time()
 
-    return total_loss / num_samples
+            print(f"{i / len_dataset}% of the training done. Loss at this minibatch : {loss}, total loss since the beginning of the epoch : {total_loss}")
+            #print(f"Time to process 100 minbatches of {batch_size} samples : {time_end_minibatch - time_beginning_minibatch}")
+            #time_beginning_minibatch = time_end_minibatch
 
+    return total_loss.item() / num_samples
 
+@torch.no_grad()
 def test(model, loader, f_loss, device):
     """
     Test a model over the loader
@@ -163,7 +173,7 @@ def test(model, loader, f_loss, device):
 
         # Update the metrics
         # We here consider the loss is batch normalized
-        total_loss += inputs.shape[0] * loss.item()
+        total_loss += inputs.shape[0] * loss.detach()
         num_samples += inputs.shape[0]
 
-    return total_loss / num_samples
+    return total_loss.item() / num_samples

@@ -7,6 +7,7 @@ import os
 import pathlib
 import subprocess # To be able to send the results directly to kaggle 
 import datetime # To enrich the log files and now when the training was launched
+import sys
 
 # External imports
 import yaml
@@ -14,6 +15,7 @@ import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
 import tqdm
+import time 
 
 # Local imports
 from . import data
@@ -24,6 +26,7 @@ from . import utils
 
 def train(config):
     print("Debut du train")
+    print("Hopefully we are running a new version of the code")
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
@@ -41,6 +44,7 @@ def train(config):
     # Build the dataloaders
     logging.info("= Building the dataloaders")
     data_config = config["data"]
+    batch_size = data_config["batch_size"]
 
     train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
         data_config, use_cuda
@@ -108,12 +112,25 @@ def train(config):
         model, str(logdir / "best_model.pt"), min_is_best=True
     )
 
+    is_dynamic = sys.stdout.isatty()
+    if is_dynamic:
+        logging.info("We are running in a dynamic environment (the tqdm bar will be shown)")
+    else:
+        logging.info("We are not running in an interactive environment so to speed up training, the tqdm bar will not be shown")
     for e in range(config["nepochs"]):
+        logging.info("Entering a new epoch")
         # Train 1 epoch
-        train_loss = utils.train(model, train_loader, loss, optimizer, device)
+        time_before_training = time.time()
+        train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size)
+        time_of_training = (time.time() - time_before_training )/60
+        logging.info(f"This epoch took {time_of_training} minutes to train")
 
         # Test
+        time_before_test= time.time()
         test_loss = utils.test(model, valid_loader, loss, device)
+        time_of_test = (time.time() - time_before_test) / 60 
+        logging.info(f"This test took {time_of_test} minutes to test")
+
 
         updated = model_checkpoint.update(test_loss)
         logging.info(
@@ -125,7 +142,6 @@ def train(config):
                 "[>> BETTER <<]" if updated else "",
             )
         )
-
         if updated:
             logging.info(f"We are logging an artifact !")
             artifact = wandb.Artifact(name="best-model",type ="model",metadata={"loss" : loss, "epoch" : e})
@@ -142,7 +158,8 @@ def train(config):
 def send_kaggle(filepath):
     subprocess.run(f"kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
 
-def test(config,send_kaggle_bool=True):
+@torch.no_grad()
+def test(config,send_kaggle_bool=False):
     """
     This function should take the model we want to test ie probably the best model 
     0.jpg, 1 
@@ -169,19 +186,22 @@ def test(config,send_kaggle_bool=True):
 
     model = models.cnn_models.PollenNet(model_config ,input_size,num_classes)
     model.load_state_dict(torch.load(model_path, weights_only=True))
-
+    model.to(device)
 
     with open(unique_save_path,"w") as file:
         model.eval()
         print(f"fichier crée à l'adresse : {unique_save_path}")
         i = 0
         file.write("imgname,label \n")
-        for img, _ in tqdm.tqdm(test_loader):
+        for img, filenames in test_loader:
+            img = img.to(device)
             logits = model(img)
             preds = torch.argmax(logits,dim=1) 
-            for e in preds:
-                file.write(f"{i}.jpg, {e} \n")
+            for pred, filename in zip(preds,filenames):
+                file.write(f"{pred.item()}, {filename.item()} \n")
+                print(filename)
                 i += 1
+    print("Fin du test. Envoi du fichier")
     if send_kaggle_bool:
         send_kaggle(unique_save_path)
     return None

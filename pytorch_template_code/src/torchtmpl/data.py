@@ -84,9 +84,12 @@ def get_dataloaders(data_config, use_cuda):
     # Build the dataloaders
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
+        batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=use_cuda,
+        persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
+        prefetch_factor=4
     )
 
 
@@ -95,6 +98,9 @@ def get_dataloaders(data_config, use_cuda):
         shuffle = False,
         num_workers=num_workers,
         pin_memory=use_cuda,
+        batch_size=2*batch_size,
+        persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
+        prefetch_factor=4
     )
 
     
@@ -102,6 +108,25 @@ def get_dataloaders(data_config, use_cuda):
 
     return train_loader, valid_loader, input_size, num_classes
 
+import torchvision.datasets as datasets
+import os
+
+class TestDataset(datasets.ImageFolder):
+    """
+    Custom Dataset that returns (image, filename) instead of (image, label).
+    """
+    def __getitem__(self, index):
+        # 1. Get the image using the parent class's method
+        # original_tuple is (image, class_index)
+        original_tuple = super().__getitem__(index)
+        image = original_tuple[0]
+        
+        # 2. Extract the filename
+        # self.samples is a list of tuples: [('path/to/img1.jpg', 0), ...]
+        path = self.samples[index][0]
+        filename = os.path.basename(path) # e.g., "121427.jpg"
+        
+        return image, filename
 
 def get_test_dataloaders(config, use_cuda): 
 
@@ -117,7 +142,7 @@ def get_test_dataloaders(config, use_cuda):
         [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
     )
 
-    test_dataset = torchvision.datasets.ImageFolder(
+    test_dataset = TestDataset(
         root=test_path,
         transform = input_transform
     )
@@ -132,6 +157,7 @@ def get_test_dataloaders(config, use_cuda):
         shuffle=False,
         num_workers=num_workers,
         pin_memory=use_cuda,
+        prefetch_factor=4
     )
 
     

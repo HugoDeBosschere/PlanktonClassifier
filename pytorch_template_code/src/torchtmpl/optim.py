@@ -4,13 +4,14 @@
 import torch
 import torch.nn as nn
 import torchvision
+import numpy as np 
 
 def get_loss(lossname):
     return eval(f"nn.{lossname}()")
 
 def get_weighted_loss(lossname, trainpath,device):
     base_dataset = base_dataset = torchvision.datasets.ImageFolder(
-        root=data_config["trainpath"],
+        root=trainpath,
     )
     classes = np.array(base_dataset.targets) 
     nb_sample_per_classes = np.bincount(classes)
