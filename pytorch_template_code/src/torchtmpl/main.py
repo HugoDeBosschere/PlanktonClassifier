@@ -41,6 +41,8 @@ def train(config):
     else:
         wandb_log = None
 
+    train_config = config["train"]
+
     # Build the dataloaders
     logging.info("= Building the dataloaders")
     data_config = config["data"]
@@ -55,12 +57,14 @@ def train(config):
     model_config = config["model"]
     model = models.build_model(model_config, input_size, num_classes)
     if "old_model_path" in model_config:
+        old_model_path = model_config["old_model_path"]
+        logging.info(f"Loading model at {old_model_path}")
         model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
     model.to(device)
 
     # Build the loss
     logging.info("= Loss")
-    loss = optim.get_weighted_loss(config["loss"], config["data"]["trainpath"],device )
+    loss = optim.get_weighted_loss(train_config["loss"], config["data"]["trainpath"],device )
 
     # Build the optimizer
     logging.info("= Optimizer")
@@ -112,12 +116,17 @@ def train(config):
         model, str(logdir / "best_model.pt"), min_is_best=True
     )
 
+    # Early stopping callback to save the model every 50 epochs even if the test loss is not bettering 
+    model_checkpoint_50_epochs =  utils.ModelCheckpoint(
+        model, str(logdir / "last_model.pt"), min_is_best=True
+    )
+
     is_dynamic = sys.stdout.isatty()
     if is_dynamic:
         logging.info("We are running in a dynamic environment (the tqdm bar will be shown)")
     else:
         logging.info("We are not running in an interactive environment so to speed up training, the tqdm bar will not be shown")
-    for e in range(config["nepochs"]):
+    for e in range(train_config["nepochs"]):
         logging.info("Entering a new epoch")
         # Train 1 epoch
         time_before_training = time.time()
@@ -137,11 +146,25 @@ def train(config):
             "[%d/%d] Test loss : %.3f %s"
             % (
                 e,
-                config["nepochs"],
+                train_config["nepochs"],
                 test_loss,
                 "[>> BETTER <<]" if updated else "",
             )
         )
+
+        if e % 50 == 0:
+            #calling with -e ensures that the model is saved since -e is strictly decreasing
+            epoch_update = model_checkpoint_50_epochs.update(-e)
+            logging.info(
+            "[%d/%d] Test loss : %.3f %s"
+            % (
+                e,
+                train_config["nepochs"],
+                test_loss,
+                "[>> LATEST <<]" if epoch_update else "",
+            )
+            )
+
         if updated:
             logging.info(f"We are logging an artifact !")
             artifact = wandb.Artifact(name="best-model",type ="model",metadata={"loss" : loss, "epoch" : e})
@@ -156,10 +179,11 @@ def train(config):
 
 
 def send_kaggle(filepath):
+    print("Envoi du fichier")
     subprocess.run(f"kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
 
 @torch.no_grad()
-def test(config,send_kaggle_bool=False):
+def test(config,send_kaggle_bool=True):
     """
     This function should take the model we want to test ie probably the best model 
     0.jpg, 1 
@@ -172,7 +196,7 @@ def test(config,send_kaggle_bool=False):
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"Device used {device}")
-
+    print("Yay on utilise la nouvelle fonction de test !")
 
     model_name = config["model"]["class"]
     model_path = config["test"]["model_path"]
@@ -198,10 +222,10 @@ def test(config,send_kaggle_bool=False):
             logits = model(img)
             preds = torch.argmax(logits,dim=1) 
             for pred, filename in zip(preds,filenames):
-                file.write(f"{pred.item()}, {filename.item()} \n")
+                file.write(f"{filename}, {pred.item()} \n")
                 print(filename)
                 i += 1
-    print("Fin du test. Envoi du fichier")
+    print("Fin du test.")
     if send_kaggle_bool:
         send_kaggle(unique_save_path)
     return None

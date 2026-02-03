@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=training
+#SBATCH --job-name=testing
 #SBATCH --nodes=1
-#SBATCH --partition=gpu_prod_long
-#SBATCH --time=12:00:00
+#SBATCH --partition=gpu_inter
+#SBATCH --time=2:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --array=1-1
-#SBATCH --exclude=sh[00,10-19]                                                                                                          
+#SBATCH --exclude=sh[00,10-19]                                                                                                     
  
 
 
@@ -22,7 +22,7 @@ echo "Copying the source directory and data"
 echo "New sbatch because I'm getting tired of doing shit"
 date
 mkdir $TMPDIR/code
-rsync -r --exclude logs --exclude logslurms --exclude configs $HOME/DeepLearning/pytorch_template_code/ $TMPDIR/code
+rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '*.egg-info' $HOME/DeepLearning/pytorch_template_code/ $TMPDIR/code
 
 #echo "Checking out the correct version of the code commit_id 388074fa8530adadf5e17d48650a162cf788d183"
 cd $TMPDIR/code
@@ -35,7 +35,10 @@ echo "Not Setting up the virtual environment (maybe my conda environment will su
 
 # Install the library
 # Note hugo : I think that the -e is very important because if you don't put it, you risk running an old version of the code 
-python -m pip install -e .
+python -m pip install --ignore-installed --no-deps -e /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/
+
+export CUDA_LAUNCH_BLOCKING=1
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 echo "Testing"
 python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-sample.yaml test

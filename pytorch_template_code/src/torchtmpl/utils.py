@@ -137,7 +137,7 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
         if not dynamic_display and (i%100) == 0 and i != 0:
             #time_end_minibatch = time.time()
 
-            print(f"{i / len_dataset}% of the training done. Loss at this minibatch : {loss}, total loss since the beginning of the epoch : {total_loss}")
+            print(f"{i / len_dataset}% of the training done. Loss at this minibatch : {loss}, total loss since the beginning of the epoch : {total_loss.item()}, total loss per input since the beginning of the epoch : {total_loss.item() / num_samples }")
             #print(f"Time to process 100 minbatches of {batch_size} samples : {time_end_minibatch - time_beginning_minibatch}")
             #time_beginning_minibatch = time_end_minibatch
 

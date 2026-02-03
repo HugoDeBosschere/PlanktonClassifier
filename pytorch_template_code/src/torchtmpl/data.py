@@ -20,6 +20,16 @@ def show_image(X):
     plt.imshow(X[0] if num_c == 1 else X.permute(1, 2, 0))
     plt.show()
 
+
+
+def one_image_per_class(dataset_path):
+    plt.figure()
+    for folder in os.listdir(dataset_path):
+        random.choice(os.listdir(folder))
+        num_c = X.shape[0]
+        plt.imshow(X[0] if num_c == 1 else X.permute(1, 2, 0))
+    plt.figure()
+
 def get_batch_weighted_uniform_sampler(num_classes, batch_size,len_dataset):
     """
     I let this here to see the work that has been done but this function should not be used 
@@ -34,16 +44,16 @@ def get_batch_weighted_uniform_sampler(num_classes, batch_size,len_dataset):
     b_sampler = torch.utils.data.BatchSampler(Wrs, batch_size,drop_last=False)
     return b_sampler
 
-def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset):
+def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset, indices):
     """
     Maybe using the batch sampler is not the right idea yet since I am not doing data augmentation
     """
-    classes = np.array(base_dataset.targets) 
-    nb_sample_per_classes = np.bincounts(classes)
+    classes = np.array(base_dataset.targets)[indices]
+    nb_sample_per_classes = np.bincount(classes)
     print(nb_sample_per_classes)
     weights_per_classes = 1 / nb_sample_per_classes
-    weights_samples = weights_per_classes[base_dataset.targets]
-    Wrs = torch.utils.data.WeightedRandomSampler(weights,len_dataset,replacement=True)
+    weights_samples = weights_per_classes[classes]
+    Wrs = torch.utils.data.WeightedRandomSampler(weights_samples,len_dataset,replacement=True)
     b_sampler = torch.utils.data.BatchSampler(Wrs, batch_size, drop_last=False)
     return b_sampler
 
@@ -52,7 +62,7 @@ def get_dataloaders(data_config, use_cuda):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
     num_workers = data_config["num_workers"]
-
+    is_batch_weighted = data_config["is_batch_weighted"]
     logging.info("  - Dataset creation")
 
     input_transform = transforms.Compose(
@@ -76,32 +86,57 @@ def get_dataloaders(data_config, use_cuda):
     valid_dataset = torch.utils.data.Subset(base_dataset, valid_indices)
 
     num_classes = len(base_dataset.classes)
-    len_dataset = len(base_dataset)
+    len_dataset_train = len(train_dataset)
+    len_dataset_valid = len(valid_dataset)
 
-    # Build the sampler
-    #b_sampler = get_batch_weighted_smart_sampler(base_dataset=base_dataset,batch_size=batch_size,len_dataset=len_dataset)
+    if is_batch_weighted:
+        # Build the train sampler (not sure it's useful having two different samplers)
+        b_sampler_train = get_batch_weighted_smart_sampler(base_dataset=base_dataset,batch_size=batch_size,len_dataset=len_dataset_train, indices=train_indices)
 
-    # Build the dataloaders
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=num_workers,
-        pin_memory=use_cuda,
-        persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
-        prefetch_factor=4
-    )
+        # Build the dataloaders
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_sampler=b_sampler_train,
+            num_workers=num_workers,
+            pin_memory=use_cuda,
+            persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
+            prefetch_factor=4
+
+        )
+        # Build the test sampler (not sure it's useful having two different samplers)
+        b_sampler_test = get_batch_weighted_smart_sampler(base_dataset=base_dataset,batch_size=batch_size,len_dataset=len_dataset_valid, indices=valid_indices)
+        
+        valid_loader = torch.utils.data.DataLoader(
+            valid_dataset,
+            batch_sampler=b_sampler_test,
+            num_workers=num_workers,
+            pin_memory=use_cuda,
+            persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
+            prefetch_factor=4
+        )
+
+    else:
+        # Build the dataloaders
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=use_cuda,
+            persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
+            prefetch_factor=4
+        )
 
 
-    valid_loader = torch.utils.data.DataLoader(
-        valid_dataset,
-        shuffle = False,
-        num_workers=num_workers,
-        pin_memory=use_cuda,
-        batch_size=2*batch_size,
-        persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
-        prefetch_factor=4
-    )
+        valid_loader = torch.utils.data.DataLoader(
+            valid_dataset,
+            shuffle = False,
+            num_workers=num_workers,
+            pin_memory=use_cuda,
+            batch_size=2*batch_size,
+            persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
+            prefetch_factor=4
+        )
 
     
     input_size = tuple(base_dataset[0][0].shape)
@@ -165,3 +200,6 @@ def get_test_dataloaders(config, use_cuda):
     num_classes = len(test_dataset.classes)
     input_size = tuple(test_dataset[0][0].shape)
     return test_loader, input_size, 86
+
+if __name__ == "__main__":
+    one_image_per_class()
