@@ -1,0 +1,35 @@
+data:
+  trainpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
+  testpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
+  batch_size: 2048
+  num_workers: 8
+  valid_ratio: 0.2
+  is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler
+
+optim:
+  algo: AdamW
+  params:
+    lr: 0.001
+    
+train:
+  nepochs: 200
+  loss: "CrossEntropyLoss"
+  is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+
+logging:
+  wandb: 
+    project: WinningKaggle
+    entity: hugo-debosschere-are-na
+  logdir: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+# model:
+#   class: Linear
+model:
+  class: VanillaCNN
+  num_layers: 6
+  size_linear : 1024
+  prob_droupout : 0.5
+  #old_model_path : None #if not None, the parameters are going to be ignored
+                                                      #and the model in old_model_path will be loaded and improved
+test:
+  model_path: "/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/logs/PollenNet_16/best_model.pt"
+  save_dir: "/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test"

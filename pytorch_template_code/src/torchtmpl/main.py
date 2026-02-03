@@ -70,7 +70,7 @@ def train(config):
         logging.info("We are using a weighted loss")
     else:
         loss = optim.get_loss(train_config["loss"])
-        logging.ingo("We are using a regular (non weighted) loss")
+        logging.info("We are using a regular (non weighted) loss")
 
     # Build the optimizer
     logging.info("= Optimizer")
