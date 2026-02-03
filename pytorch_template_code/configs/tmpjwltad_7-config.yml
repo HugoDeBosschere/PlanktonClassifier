@@ -12,7 +12,7 @@ optim:
     lr: 0.001
     
 train:
-  nepochs: 200
+  nepochs: 1
   loss: "CrossEntropyLoss"
   is_weighted: True #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   test_end_train: True
@@ -31,3 +31,6 @@ model:
   prob_droupout : 0.5
   #old_model_path : None #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
+test:
+  model_path: "/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/logs/PollenNet_16/best_model.pt"
+  save_dir: "/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test"

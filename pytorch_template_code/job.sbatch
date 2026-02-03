@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=tentative
+#SBATCH --job-name=CNNlong
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
@@ -22,16 +22,19 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
-echo "Checking out the correct version of the code commit_id 49cb0cfac06c775d5e9c71ca77a236b50eaf1fac"
+echo "Checking out the correct version of the code commit_id eff09df6bef7a6b3e865b0fea0a01b338c81d648"
 cd $TMPDIR/code
-git checkout 49cb0cfac06c775d5e9c71ca77a236b50eaf1fac
+git checkout eff09df6bef7a6b3e865b0fea0a01b338c81d648
 
+echo "Setting up the virtual environment"
+python3 -m venv venv
+source venv/bin/activate
 
 # Install the library
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpc32bqqnj-config.yml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpjwltad_7-config.yml train
 
 if [[ $? != 0 ]]; then
     exit -1
