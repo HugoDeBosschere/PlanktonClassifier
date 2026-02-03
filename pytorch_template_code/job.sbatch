@@ -6,7 +6,7 @@
 #SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --exclude=sh[00,03,05,10-19] 
+#SBATCH --exclude=sh[00,03,05] 
 #SBATCH --array=1-1
 
 
@@ -22,16 +22,16 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
-echo "Checking out the correct version of the code commit_id 9a3919de3675b16a7b4cedb6b97c824e6a879359"
+echo "Checking out the correct version of the code commit_id b2ebd037957666b662620377b91b7ccc1d776d93"
 cd $TMPDIR/code
-git checkout 9a3919de3675b16a7b4cedb6b97c824e6a879359
+git checkout b2ebd037957666b662620377b91b7ccc1d776d93
 
 
 # Install the library
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpt9wlcweo-config.yml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp1lic_3my-config.yml train
 
 if [[ $? != 0 ]]; then
     exit -1
