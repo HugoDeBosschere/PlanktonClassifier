@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=templatecode
+#SBATCH --job-name=VanillaCNN_200_epochs
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_night
 #SBATCH --time=12:00:00
@@ -21,16 +21,16 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
-echo "Checking out the correct version of the code commit_id 68afab5eb937d690376e9d6d1e2a336ee439e7d6"
+echo "Checking out the correct version of the code commit_id b5fbb980e2fd40f53b8a4606fbe67de3725dd8c8"
 cd $TMPDIR/code
-git checkout 68afab5eb937d690376e9d6d1e2a336ee439e7d6
+git checkout b5fbb980e2fd40f53b8a4606fbe67de3725dd8c8
 
 
 # Install the library
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp50l7i4mo-config.yml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpkwzza7xs-config.yml train
 
 if [[ $? != 0 ]]; then
     exit -1
