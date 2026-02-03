@@ -184,6 +184,9 @@ def train(config):
             logging.info("Logging on wandb")
             wandb_log(metrics)
 
+    if train_config["test_end_train"]:
+        test(config)
+
 
 def send_kaggle(filepath):
     print("Envoi du fichier")
