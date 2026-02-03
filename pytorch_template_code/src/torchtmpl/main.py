@@ -64,7 +64,13 @@ def train(config):
 
     # Build the loss
     logging.info("= Loss")
-    loss = optim.get_weighted_loss(train_config["loss"], config["data"]["trainpath"],device )
+    is_weighted = train_config["is_weighted"]
+    if is_weighted:
+        loss = optim.get_weighted_loss(train_config["loss"], config["data"]["trainpath"],device )
+        logging.info("We are using a weighted loss")
+    else:
+        loss = optim.get_loss(train_config["loss"])
+        logging.ingo("We are using a regular (non weighted) loss")
 
     # Build the optimizer
     logging.info("= Optimizer")

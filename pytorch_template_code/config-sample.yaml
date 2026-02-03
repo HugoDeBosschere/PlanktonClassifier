@@ -4,7 +4,7 @@ data:
   batch_size: 2048
   num_workers: 8
   valid_ratio: 0.2
-  is_batch_weighted : True #If True, The dataloader are initialized with a RandomWeightedSampler
+  is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler
 
 optim:
   algo: AdamW
@@ -24,11 +24,11 @@ logging:
 # model:
 #   class: Linear
 model:
-  class: PollenNet
-  num_layers: 6
+  class: VanillaCNN
+  num_layers: 8
   size_linear : 1024
   prob_droupout : 0.5
-  old_model_path : "/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/logs/PollenNet_10/best_model.pt" #if not None, the parameters are going to be ignored
+  #old_model_path : None #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
 test:
   model_path: "/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/logs/PollenNet_16/best_model.pt"
