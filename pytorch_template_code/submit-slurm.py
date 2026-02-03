@@ -9,7 +9,7 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
-#SBATCH --job-name=tentative
+#SBATCH --job-name=CNNlong
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
@@ -35,6 +35,9 @@ echo "Checking out the correct version of the code commit_id {commit_id}"
 cd $TMPDIR/code
 git checkout {commit_id}
 
+echo "Setting up the virtual environment"
+python3 -m venv venv
+source venv/bin/activate
 
 # Install the library
 python -m pip install .
