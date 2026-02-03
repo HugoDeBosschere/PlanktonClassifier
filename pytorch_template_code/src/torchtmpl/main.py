@@ -185,6 +185,7 @@ def train(config):
             wandb_log(metrics)
 
     if train_config["test_end_train"]:
+        logging.info("Envoi automatique du fichier")
         test(config)
 
 

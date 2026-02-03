@@ -20,16 +20,16 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
-echo "Checking out the correct version of the code commit_id 7c4ab7f557203eecb911ca84628913112ec7bdf0"
+echo "Checking out the correct version of the code commit_id 3c30a5812ea4c6bb762b7147b546861e87f0df03"
 cd $TMPDIR/code
-git checkout 7c4ab7f557203eecb911ca84628913112ec7bdf0
+git checkout 3c30a5812ea4c6bb762b7147b546861e87f0df03
 
 
 # Install the library
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpdvj2fgwy-config.yml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpzecbzy7u-config.yml train
 
 if [[ $? != 0 ]]; then
     exit -1
