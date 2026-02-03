@@ -14,7 +14,7 @@ optim:
 train:
   nepochs: 1
   loss: "CrossEntropyLoss"
-  is_weighted: True #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+  is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   test_end_train: True
 
 logging:
