@@ -26,7 +26,7 @@ from . import utils
 
 def train(config):
     print("Debut du train")
-    print("Hopefully we are running a new version of the code")
+    print("Are we running an old version ?")
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
