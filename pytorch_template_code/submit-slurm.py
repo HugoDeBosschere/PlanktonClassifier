@@ -9,7 +9,7 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
-#SBATCH --job-name=CNNlong
+#SBATCH --job-name=gpuusage
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
@@ -30,6 +30,19 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
+export TMPDIR
+
+echo "Copying the dataset to have faster access to the samples"
+mkdir $TMPDIR/dataset
+mkdir $TMPDIR/dataset/train 
+mkdir $TMPDIR/dataset/test
+cp /mounts/datasets/datasets/2025-ZooCamChallenge/train $TMPDIR/dataset/train
+cp /mounts/datasets/datasets/2025-ZooCamChallenge/test $TMPDIR/dataset/test
+envsubst <{configpath}> $TMPDIR/config.yaml
+
+echo "Verifying that the right configuration has been generated" 
+cat $TMPDIR/config.yaml
+
 echo "Checking out the correct version of the code commit_id {commit_id}"
 cd $TMPDIR/code
 git checkout {commit_id}
@@ -42,7 +55,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main {configpath} train
+python -m torchtmpl.main $TMPDIR/config.yaml train
 
 if [[ $? != 0 ]]; then
     exit -1

@@ -1,6 +1,6 @@
 data:
-  trainpath: '$TMPDIR/dataset/train'
-  testpath: '$TMPDIR/dataset/test'
+  trainpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
+  testpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
   batch_size: 2048
   num_workers: 8
   valid_ratio: 0.2
@@ -26,7 +26,7 @@ logging:
 #   class: Linear
 model:
   class: VanillaCNN
-  num_layers: 6 
+  num_layers: 1 
   size_linear : 1024
   prob_droupout : 0.5
   #old_model_path : None #if not None, the parameters are going to be ignored

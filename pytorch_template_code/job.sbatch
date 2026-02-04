@@ -6,7 +6,6 @@
 #SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --exclude=sh[00,03,05,10-19] 
 #SBATCH --array=1-1
 
 
@@ -22,9 +21,9 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
-echo "Checking out the correct version of the code commit_id c3e1d5b7b3332908cf68d0633b2d0cdcd584ef5c"
+echo "Checking out the correct version of the code commit_id 030dcf176ce6b48a28157fe08d40d5e125b0d67c"
 cd $TMPDIR/code
-git checkout c3e1d5b7b3332908cf68d0633b2d0cdcd584ef5c
+git checkout 030dcf176ce6b48a28157fe08d40d5e125b0d67c
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -34,7 +33,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmppuz3tt56-config.yml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpwjsix9us-config.yml train
 
 if [[ $? != 0 ]]; then
     exit -1
