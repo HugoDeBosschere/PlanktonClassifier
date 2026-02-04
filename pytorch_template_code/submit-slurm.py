@@ -32,13 +32,13 @@ rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
 export TMPDIR
 
-echo "Copying the dataset to have faster access to the samples"
-mkdir $TMPDIR/dataset
-rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst <{configpath}> $TMPDIR/config.yaml
+#echo "Copying the dataset to have faster access to the samples"
+#mkdir $TMPDIR/dataset
+#rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+#envsubst <{configpath}> $TMPDIR/config.yaml
 
-echo "Verifying that the right configuration has been generated" 
-cat $TMPDIR/config.yaml
+#echo "Verifying that the right configuration has been generated" 
+#cat $TMPDIR/config.yaml
 
 echo "Checking out the correct version of the code commit_id {commit_id}"
 cd $TMPDIR/code
