@@ -28,13 +28,13 @@ echo "Running on " $(hostname)
 echo "Copying the source directory and data"
 date
 mkdir $TMPDIR/code
-rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
+rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
 
 export TMPDIR
 
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
-rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
 envsubst <{configpath}> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
