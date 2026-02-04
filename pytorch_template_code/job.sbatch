@@ -6,7 +6,7 @@
 #SBATCH --time=2:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --nodelist=tx[00,10]
+#SBATCH --nodelist=tx[01,04]
 #SBATCH --array=1-1
 
 
@@ -27,14 +27,14 @@ export TMPDIR
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
 #rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpsna4apj8-config.yml> $TMPDIR/config.yaml
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp9vabnpqv-config.yml> $TMPDIR/config.yaml
 
 #echo "Verifying that the right configuration has been generated" 
 #cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id bd7b345ad07f4e16b61520ec1e10c08edd795825"
+echo "Checking out the correct version of the code commit_id be5964c5ec74d39666bc9fde983503910bb0c358"
 cd $TMPDIR/code
-git checkout bd7b345ad07f4e16b61520ec1e10c08edd795825
+git checkout be5964c5ec74d39666bc9fde983503910bb0c358
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
