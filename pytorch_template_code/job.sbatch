@@ -23,17 +23,17 @@ rsync -r --exclude logs --exclude logslurms --exclude configs . $TMPDIR/code
 
 export TMPDIR
 
-echo "Copying the dataset to have faster access to the samples"
-mkdir $TMPDIR/dataset
-rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp1ex0vz2b-config.yml> $TMPDIR/config.yaml
+#echo "Copying the dataset to have faster access to the samples"
+#mkdir $TMPDIR/dataset
+#rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp7ewnmhk6-config.yml> $TMPDIR/config.yaml
 
-echo "Verifying that the right configuration has been generated" 
-cat $TMPDIR/config.yaml
+#echo "Verifying that the right configuration has been generated" 
+#cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 65cda597265d7cb0bfd48e0fe011f1780a657840"
+echo "Checking out the correct version of the code commit_id 38c1600d74ffe8b5c0ac8c228dbef2040c9f82df"
 cd $TMPDIR/code
-git checkout 65cda597265d7cb0bfd48e0fe011f1780a657840
+git checkout 38c1600d74ffe8b5c0ac8c228dbef2040c9f82df
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
