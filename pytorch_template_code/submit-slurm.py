@@ -9,7 +9,7 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
-#SBATCH --job-name=gpuusage
+#SBATCH --job-name=autosend
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
