@@ -11,7 +11,7 @@ def makejob(commit_id, configpath, nruns):
 
 #SBATCH --job-name=autosend
 #SBATCH --nodes=1
-#SBATCH --partition=gpu_inter
+#SBATCH --partition=gpu_tp
 #SBATCH --time=2:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
