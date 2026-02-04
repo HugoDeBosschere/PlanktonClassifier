@@ -26,14 +26,14 @@ export TMPDIR
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
 #rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp7ewnmhk6-config.yml> $TMPDIR/config.yaml
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp6sdo809s-config.yml> $TMPDIR/config.yaml
 
 #echo "Verifying that the right configuration has been generated" 
 #cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 38c1600d74ffe8b5c0ac8c228dbef2040c9f82df"
+echo "Checking out the correct version of the code commit_id 1f49d1d4018615b1ec3e0f252b0724070efd1d05"
 cd $TMPDIR/code
-git checkout 38c1600d74ffe8b5c0ac8c228dbef2040c9f82df
+git checkout 1f49d1d4018615b1ec3e0f252b0724070efd1d05
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
