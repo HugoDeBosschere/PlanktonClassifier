@@ -31,6 +31,7 @@ mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
 
 export TMPDIR
+PYTORCH_ALLOC_CONF=expandable_segments:True 
 
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
