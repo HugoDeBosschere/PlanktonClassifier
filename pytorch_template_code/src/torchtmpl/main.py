@@ -186,7 +186,9 @@ def train(config):
 
     if train_config["test_end_train"]:
         logging.info("Envoi automatique du fichier")
-        test(config)
+        with open(logdir / "config.yaml", "r") as file:
+            ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
+            test(file)
 
 
 def send_kaggle(filepath):

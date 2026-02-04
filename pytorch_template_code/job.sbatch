@@ -26,14 +26,14 @@ export TMPDIR
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
 #rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp5057hkae-config.yml> $TMPDIR/config.yaml
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpnq7af2gq-config.yml> $TMPDIR/config.yaml
 
 #echo "Verifying that the right configuration has been generated" 
 #cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 8d1b486d394feed107169fada609c251049fb42f"
+echo "Checking out the correct version of the code commit_id cafd3d120484704ed4775720c80b98c50855a8bf"
 cd $TMPDIR/code
-git checkout 8d1b486d394feed107169fada609c251049fb42f
+git checkout cafd3d120484704ed4775720c80b98c50855a8bf
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -43,7 +43,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-sample.yaml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-no-tmp.yaml train
 
 if [[ $? != 0 ]]; then
     exit -1
