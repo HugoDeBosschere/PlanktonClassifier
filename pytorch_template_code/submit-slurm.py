@@ -34,10 +34,7 @@ export TMPDIR
 
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
-mkdir $TMPDIR/dataset/train 
-mkdir $TMPDIR/dataset/test
-cp /mounts/datasets/datasets/2025-ZooCamChallenge/train $TMPDIR/dataset/train
-cp /mounts/datasets/datasets/2025-ZooCamChallenge/test $TMPDIR/dataset/test
+rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
 envsubst <{configpath}> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
