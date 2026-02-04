@@ -15,7 +15,6 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --time=2:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --nodelist=tx[01,04]
 #SBATCH --array=1-{nruns}
 
 
