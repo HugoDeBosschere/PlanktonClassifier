@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --gres=gpu:1
 #SBATCH --job-name=autosend
 #SBATCH --nodes=1
-#SBATCH --partition=prod80
-#SBATCH --time=24:00:00
+#SBATCH --partition=gpu_prod_long
+#SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
+#SBATCH --exclude=sh[00,05,03,10-22]    
 #SBATCH --array=1-1
 
 
@@ -23,18 +23,19 @@ mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
 
 export TMPDIR
+export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-#echo "Copying the dataset to have faster access to the samples"
-#mkdir $TMPDIR/dataset
-#rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpn_irjrcf-config.yml> $TMPDIR/config.yaml
+echo "Copying the dataset to have faster access to the samples"
+mkdir $TMPDIR/dataset
+rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpkhil6yme-config.yml> $TMPDIR/config.yaml
 
-#echo "Verifying that the right configuration has been generated" 
-#cat $TMPDIR/config.yaml
+echo "Verifying that the right configuration has been generated" 
+cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 01d3cb06ae7f7e2d2ef88d5246923f14bf0920d5"
+echo "Checking out the correct version of the code commit_id c3d5ec3ee8b16cbd009908c18f7398ab84dcb6fb"
 cd $TMPDIR/code
-git checkout 01d3cb06ae7f7e2d2ef88d5246923f14bf0920d5
+git checkout c3d5ec3ee8b16cbd009908c18f7398ab84dcb6fb
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -44,7 +45,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-no-tmp.yaml train
+python -m torchtmpl.main $TMPDIR/config.yaml train
 
 if [[ $? != 0 ]]; then
     exit -1
