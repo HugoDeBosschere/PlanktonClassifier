@@ -187,6 +187,7 @@ def train(config):
     if train_config["test_end_train"]:
         logging.info("Envoi automatique du fichier")
         with open(logdir / "config.yaml", "r") as file:
+            print(file)
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
             test(yaml.safe_load(file))
 
