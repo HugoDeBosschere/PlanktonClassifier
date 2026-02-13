@@ -8,7 +8,8 @@ import tempfile
 
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
-#SBATCH --cpus-per-task=0
+
+#SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=autosend
@@ -17,7 +18,6 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --exclude=sh[00,05,03,10-22]    
 #SBATCH --array=1-{nruns}
 
 
