@@ -11,10 +11,10 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:A100.80gb:1
+#SBATCH --gres=gpu:A100.40gb:1
 #SBATCH --job-name=autosend
 #SBATCH --nodes=1
-#SBATCH --partition=prod80
+#SBATCH --partition=prod40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
