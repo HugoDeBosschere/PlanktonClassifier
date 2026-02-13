@@ -217,12 +217,12 @@ def test(config,send_kaggle_bool=True):
     print(f"We are currently testing the model at {model_path}")
     save_dir = config["test"]["save_dir"]
     unique_save_path = utils.generate_unique_csv(save_dir,model_name)
-
+    print(f"unique save path is {unique_save_path}")
     test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda)
     
     model_config = config["model"]
 
-    model = models.cnn_models.VanillaCNN(model_config ,input_size,num_classes)
+    model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.to(device)
 
