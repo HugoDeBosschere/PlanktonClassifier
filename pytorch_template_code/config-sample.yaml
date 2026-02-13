@@ -22,6 +22,7 @@ logging:
     project: WinningKaggle
     entity: hugo-debosschere-are-na
   logdir: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+  save_dir : /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
 # model:
 #   class: Linear
 model:
