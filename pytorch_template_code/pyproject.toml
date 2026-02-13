@@ -15,3 +15,8 @@ dependencies = [
 
 [options]
 package_dir = "torchtmpl"
+
+[tool.uv.workspace]
+members = [
+    "uv_deep_project",
+]
