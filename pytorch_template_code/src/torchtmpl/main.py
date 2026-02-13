@@ -222,7 +222,7 @@ def test(config,send_kaggle_bool=True):
     
     model_config = config["model"]
 
-    model = models.cnn_models.PollenNet(model_config ,input_size,num_classes)
+    model = models.cnn_models.VanillaCNN(model_config ,input_size,num_classes)
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.to(device)
 
