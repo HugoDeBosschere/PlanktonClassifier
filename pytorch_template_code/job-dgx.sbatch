@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=autosend
 #SBATCH --nodes=1
 #SBATCH --partition=prod80
