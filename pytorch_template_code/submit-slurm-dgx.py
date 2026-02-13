@@ -9,7 +9,7 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 #SBATCH --mem=64G
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=0
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:3g.40gb
 #SBATCH --job-name=autosend
