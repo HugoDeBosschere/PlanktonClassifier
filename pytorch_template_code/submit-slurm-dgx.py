@@ -9,10 +9,11 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=autosend
 #SBATCH --nodes=1
-#SBATCH --partition=gpu_prod_long
-#SBATCH --time=48:00:00
+#SBATCH --partition=prod80
+#SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --exclude=sh[00,05,03,10-22]    
