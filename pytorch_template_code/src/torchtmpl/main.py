@@ -90,7 +90,7 @@ def train(config):
 
     # Copy the config file into the logdir
     logdir = pathlib.Path(logdir)
-    save_dir = logging_config["save_dire"]
+    save_dir = logging_config["save_dir"]
     with open(logdir / "config.yaml", "w") as file:
         ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
         yaml.dump(config, file)
