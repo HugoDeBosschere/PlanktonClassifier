@@ -11,7 +11,7 @@ def makejob(commit_id, configpath, nruns):
 
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:A100.80gb:1
 #SBATCH --job-name=autosend
 #SBATCH --nodes=1
 #SBATCH --partition=prod80
