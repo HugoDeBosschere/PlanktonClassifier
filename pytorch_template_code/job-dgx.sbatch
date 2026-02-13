@@ -30,14 +30,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp4h_u0li_-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpx0cmu6rv-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 53f3d375b872356da57a9dc6d66671ecc48c393d"
+echo "Checking out the correct version of the code commit_id b77cbf70de46ac713b42a8ff1e7832aa81863e7a"
 cd $TMPDIR/code
-git checkout 53f3d375b872356da57a9dc6d66671ecc48c393d
+git checkout b77cbf70de46ac713b42a8ff1e7832aa81863e7a
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -47,7 +47,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml train
+python -m torchtmpl.main $TMPDIR/config.yaml test
 
 if [[ $? != 0 ]]; then
     exit -1

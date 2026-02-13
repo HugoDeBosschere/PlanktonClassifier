@@ -56,7 +56,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml test
+python -m torchtmpl.main $TMPDIR/config.yaml train
 
 if [[ $? != 0 ]]; then
     exit -1
