@@ -188,7 +188,7 @@ def train(config):
         logging.info("Envoi automatique du fichier")
         with open(logdir / "config.yaml", "r") as file:
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
-            test(file)
+            test(yaml.safe_load(file))
 
 
 def send_kaggle(filepath):
