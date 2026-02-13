@@ -93,7 +93,7 @@ def train(config):
     with open(logdir / "config.yaml", "w") as file:
         ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
         yaml.dump(config, file)
-        file.write(f"test:\n    model_path: {os.path.abspath(logdir)}\n    save_dir: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test")
+        file.write(f"test:\n    model_path: {os.path.abspath(logdir)}.pt\n    save_dir: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test")
 
     # Make a summary script of the experiment
     input_size = next(iter(train_loader))[0].shape
