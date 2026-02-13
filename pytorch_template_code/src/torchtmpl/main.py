@@ -195,7 +195,7 @@ def train(config):
 
 def send_kaggle(filepath):
     print("Envoi du fichier")
-    subprocess.run(f"kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
+    subprocess.run(f"uv run kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
 
 @torch.no_grad()
 def test(config,send_kaggle_bool=True):
