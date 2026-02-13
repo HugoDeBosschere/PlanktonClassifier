@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=autosend
@@ -29,14 +30,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpbkombey0-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp5vrjlk0u-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id b3fa185e26d4eec73871151e1d7640bd6c548159"
+echo "Checking out the correct version of the code commit_id 69baafffae6c70f528a7168d96e6e0397f400fac"
 cd $TMPDIR/code
-git checkout b3fa185e26d4eec73871151e1d7640bd6c548159
+git checkout 69baafffae6c70f528a7168d96e6e0397f400fac
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
