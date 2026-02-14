@@ -12,7 +12,7 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:2g.20gb:1
-#SBATCH --job-name=autosend
+#SBATCH --job-name=newpollennet
 #SBATCH --nodes=1
 #SBATCH --partition=prod20
 #SBATCH --time=24:00:00
