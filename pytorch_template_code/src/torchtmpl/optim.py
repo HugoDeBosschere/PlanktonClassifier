@@ -25,6 +25,9 @@ def get_weighted_loss(lossname, trainpath,device):
     else:
         raise ValueError(f"Loss {lossname} not found in torch.nn")
 
+def get_focal_loss(lossname, trainpath, device, gamma):
+    return (1-)**(gamma) * get_weighted_loss(lossname, trainpath, device)
+
 def get_optimizer(cfg, params):
     params_dict = cfg["params"]
     exec(f"global optim; optim = torch.optim.{cfg['algo']}(params, **params_dict)")
