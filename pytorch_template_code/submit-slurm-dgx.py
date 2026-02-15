@@ -11,7 +11,7 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:2g.20gb:2
+#SBATCH --gres=gpu:2g.20gb:1
 #SBATCH --job-name=focalloss
 #SBATCH --nodes=1
 #SBATCH --partition=prod20
