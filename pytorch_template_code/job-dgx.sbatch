@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --mem=64G
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:A100.80gb:1
+#SBATCH --gres=gpu:3.40gb:1
 #SBATCH --job-name=focalloss
 #SBATCH --nodes=1
-#SBATCH --partition=prod80
+#SBATCH --partition=prod40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
@@ -30,14 +30,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp712eutad-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp6sznirpe-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 53c0787b5a8f09f77085a8bd6f14f285c2403c33"
+echo "Checking out the correct version of the code commit_id aadf56e9a5cd19fc8a1336dd6e19d542bb993876"
 cd $TMPDIR/code
-git checkout 53c0787b5a8f09f77085a8bd6f14f285c2403c33
+git checkout aadf56e9a5cd19fc8a1336dd6e19d542bb993876
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
