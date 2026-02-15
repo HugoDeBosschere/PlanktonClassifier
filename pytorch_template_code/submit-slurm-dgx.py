@@ -9,12 +9,12 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 #SBATCH --mem=64G
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:2g.20gb:1
-#SBATCH --job-name=newpollennet
+#SBATCH --gres=gpu:4g.80gb:1
+#SBATCH --job-name=focalloss
 #SBATCH --nodes=1
-#SBATCH --partition=prod20
+#SBATCH --partition=prod80
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err

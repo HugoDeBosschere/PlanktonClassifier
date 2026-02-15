@@ -6,7 +6,13 @@ import torch.nn as nn
 import torchvision
 import numpy as np 
 
-def get_loss(lossname):
+def get_loss(loss_config, trainpath, device):
+    gamma = loss_config["gamma"]
+    lossname = loss_config["lossname"]
+    focal_loss_set = ("FocalLoss", "focalloss","Focalloss", "focalLoss", "focal_loss", "FocalLoss ")
+    if lossname in focal_loss_set:
+        print("We are using a Focal Loss")
+        return get_focal_loss(trainpath, device, gamma) 
     return eval(f"nn.{lossname}()")
 
 def get_weighted_loss(lossname, trainpath,device):

@@ -62,14 +62,16 @@ def train(config):
         model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
     model.to(device)
 
+
     # Build the loss
     logging.info("= Loss")
-    is_weighted = train_config["is_weighted"]
+    loss_config = config["loss"]
+    is_weighted = loss_config["is_weighted"]
     if is_weighted:
-        loss = optim.get_weighted_loss(train_config["loss"], config["data"]["trainpath"],device )
+        loss = optim.get_weighted_loss(loss_config["lossname"], config["data"]["trainpath"],device )
         logging.info("We are using a weighted loss")
     else:
-        loss = optim.get_loss(train_config["loss"])
+        loss = optim.get_loss(loss_config, config["data"]["trainpath"],device )
         logging.info("We are using a regular (non weighted) loss")
 
     # Build the optimizer
