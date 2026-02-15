@@ -35,7 +35,7 @@ def get_focal_loss(trainpath, device, gamma):
     base_dataset = base_dataset = torchvision.datasets.ImageFolder(
         root=trainpath,
     )
-    classes = torch.array(base_dataset.targets) 
+    classes = torch.tensor(base_dataset.targets) 
     nb_sample_per_classes = torch.bincount(classes)
     print(f"nombre de sample pour chaque classe : {nb_sample_per_classes}")
     weights_per_classes = 1 / nb_sample_per_classes
