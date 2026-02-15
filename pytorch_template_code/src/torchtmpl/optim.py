@@ -24,10 +24,28 @@ def get_weighted_loss(lossname, trainpath,device):
         return loss(weight=weights_tensor)
     else:
         raise ValueError(f"Loss {lossname} not found in torch.nn")
-"""
-def get_focal_loss(lossname, trainpath, device, gamma):
-   return (1-)**(gamma) * get_weighted_loss(lossname, trainpath, device)
-"""
+
+def get_focal_loss(trainpath, device, gamma):
+    base_dataset = base_dataset = torchvision.datasets.ImageFolder(
+        root=trainpath,
+    )
+    classes = torch.array(base_dataset.targets) 
+    nb_sample_per_classes = torch.bincount(classes)
+    print(f"nombre de sample pour chaque classe : {nb_sample_per_classes}")
+    weights_per_classes = 1 / nb_sample_per_classes
+    weights_per_classes = weights_per_classes.to(device)
+
+    def focal_loss(outputs, targets):
+        softmax = nn.Softmax(dim = 0)
+        probas = softmax(outputs)
+        indexing = torch.arange(len(outputs))
+        proba = probas[indexing, targets]
+        alphas = weights_per_classes[targets]
+        ones = torch.ones_like(proba)    
+        return torch.sum(alphas * (ones-proba)**gamma * (-torch.log(proba)))
+    
+    return focal_loss
+
 def get_optimizer(cfg, params):
     params_dict = cfg["params"]
     exec(f"global optim; optim = torch.optim.{cfg['algo']}(params, **params_dict)")
