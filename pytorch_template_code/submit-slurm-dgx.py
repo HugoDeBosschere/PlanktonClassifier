@@ -14,7 +14,7 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --gres=gpu:A100.40gb:1
 #SBATCH --job-name=focalloss
 #SBATCH --nodes=1
-#SBATCH --partition=prod20
+#SBATCH --partition=prod40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
