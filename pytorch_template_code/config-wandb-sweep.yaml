@@ -26,7 +26,7 @@ parameters:
   optim.algo:
     values : [AdamW,"Muon"]
   optim.params.lr:
-      distribution: lod_uniform_values
+      distribution: log_uniform_values
       max: 0.1 
       min : 0.0001
 
