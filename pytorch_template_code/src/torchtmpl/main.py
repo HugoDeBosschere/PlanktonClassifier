@@ -32,7 +32,7 @@ def train_sweep():
     with wandb.init() as run:
         config = run.config  
         wandb_log = wandb.log
-        wandb_log(config)
+        logging.info(config)
         
         logging.info(f"Will be recording in wandb run name : {wandb.run.name}")
         
