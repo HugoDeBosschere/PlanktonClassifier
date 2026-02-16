@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=autosend
+#SBATCH --job-name=sweep2
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
@@ -28,14 +28,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpdkdvnccp-config.yml> $TMPDIR/config.yaml
+envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpc2i7f6ob-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id d936982670158250cf3449dd11e205a0ecc73d7e"
+echo "Checking out the correct version of the code commit_id 0594e7715a6f5894651eed780a42956665be2740"
 cd $TMPDIR/code
-git checkout d936982670158250cf3449dd11e205a0ecc73d7e
+git checkout 0594e7715a6f5894651eed780a42956665be2740
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
