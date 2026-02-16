@@ -1,0 +1,40 @@
+data:
+  trainpath: '$TMPDIR/dataset/train'
+  testpath: '$TMPDIR/dataset/test'
+  batch_size: 2048
+  num_workers: 16
+  valid_ratio: 0.2
+  is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler
+
+optim:
+  algo: AdamW
+  params:
+    lr: 0.001
+
+loss:
+  lossname: "FocalLoss"
+  is_weighted: False 
+  gamma: 2
+
+
+train:
+  nepochs: 100
+  loss: "FocalLoss"
+  is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+  test_end_train: True
+
+logging:
+  wandb: 
+    project: WinningKaggle
+    entity: hugo-debosschere-are-na
+  logdir: "~/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+  save_dir : "/raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test"
+# model:
+#   class: Linear
+model:
+  class: PollenNet
+  num_layers: 4 
+  size_linear : 1024
+  prob_droupout : 0.5
+  #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_0/best_model.pt #if not None, the parameters are going to be ignored
+                                                      #and the model in old_model_path will be loaded and improved
