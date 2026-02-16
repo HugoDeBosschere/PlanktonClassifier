@@ -8,46 +8,62 @@ metric:
   goal: minimize
   name: test_CE
 parameters:
+  
+  data.trainpath:
+    value: '$TMPDIR/dataset/train'
+  data.testpath:
+    value: '$TMPDIR/dataset/test'
+  data.batch_size:
+    values: [2048,4096]
+  data.num_workers:
+    value: 16
+  data.valid_ratio:
+    value: 0.2
+  data.is_batch_weighted :
+    value: False #If True, The dataloader are initialized with a RandomWeightedSampler
 
-  data:
-    trainpath: '$TMPDIR/dataset/train'
-    testpath: '$TMPDIR/dataset/test'
-    batch_size: [2048,4096]
-    num_workers: 16
-    valid_ratio: 0.2
-    is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler
+  
+  optim.algo:
+    values : [AdamW,"Muon"]
+  optim.params.lr:
+      distribution: lod_uniform_values
+      max: 0.1 
+      min : 0.0001
 
-  optim:
-    algo: AdamW
-    params:
-      lr:
-        max: 0.1 
-        min : 0.0001
-
-  loss:
-    lossname: ["FocalLoss","CrossEntropyLoss"]
-    is_weighted: [True, False] 
-    gamma:
-      max: 10
-      min: 1
-
-
-  train:
-    nepochs: [20, 50, 100, 150, 200]
-    is_weighted: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
-    test_end_train: True
-
-  logging:
-    logdir: "~/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
-    save_dir : "/raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test"
+  loss.lossname:
+    values: ["FocalLoss","CrossEntropyLoss"]
+  loss.is_weighted:
+    values: [True, False] 
+  loss.gamma:
+    distribution: uniform
+    max: 10
+    min: 1
 
 
-  model:
-    class: PollenNet
-    num_layers: [3,4,5] 
-    size_linear : [256,521,1024]
-    prob_droupout :
-      min: 0 
-      max : 0.99
-    #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
+  
+  train.nepochs: 
+    values: [20, 50, 100, 150, 200]
+  train.is_weighted:
+    values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+  train.test_end_train:
+    value: True
+
+  
+  logging.logdir:
+    value: "~/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+  logging.save_dir :
+    value: "/raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test"
+
+
+  
+  model.class:
+    value: PollenNet
+  model.num_layers:
+    values: [3,4,5] 
+  model.size_linear :
+    values: [256,521,1024]
+  model.prob_droupout:
+    min: 0 
+    max : 0.99
+  #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
   
