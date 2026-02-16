@@ -63,7 +63,7 @@ parameters:
   model.size_linear :
     values: [256,521,1024]
   model.prob_droupout:
-    min: 0 
+    min: 0.0 
     max : 0.99
   #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
   
