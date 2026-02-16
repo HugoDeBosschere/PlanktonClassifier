@@ -29,7 +29,7 @@ def train_sweep():
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
 
-    with wandb.init(config=config) as run:
+    with wandb.init() as run:
         config = run.config  
         wandb_log = wandb.log
         wandb_log(config)
