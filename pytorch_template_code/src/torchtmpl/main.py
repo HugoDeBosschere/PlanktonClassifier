@@ -30,7 +30,8 @@ def train_sweep():
     print(f"We are using {device} for training")
 
     with wandb.init() as run:
-        config = run.config  
+        config = run.config
+        config = utils.unflatten_config(config) #We unflatten the dicitonary given to wandb with this utility function  
         wandb_log = wandb.log
         logging.info(config)
         

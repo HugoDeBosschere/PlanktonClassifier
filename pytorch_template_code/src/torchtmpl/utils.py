@@ -10,6 +10,21 @@ import torch.nn
 import tqdm
 #import time 
 
+def unflatten_config(flat_config):
+    """
+    Converts a flat dictionary {"train.epochs": 10} 
+    into a nested one {"train": {"epochs": 10}}
+    """
+    nested_config = {}
+    for key, value in flat_config.items():
+        parts = key.split('.')
+        d = nested_config
+        for part in parts[:-1]:
+            if part not in d:
+                d[part] = {}
+            d = d[part]
+        d[parts[-1]] = value
+    return nested_config
 
 def generate_unique_logpath(logdir, raw_run_name):
     """
