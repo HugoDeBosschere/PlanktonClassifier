@@ -16,7 +16,7 @@ parameters:
   data.batch_size:
     values: [1024,2048]
   data.num_workers:
-    value: 16
+    value: 8
   data.valid_ratio:
     value: 0.2
   data.is_batch_weighted :
@@ -29,7 +29,7 @@ parameters:
       distribution: log_uniform_values
       max: 0.1 
       min : 0.0001
-  optim.params.weigth_decay:
+  optim.params.weight_decay:
       distribution: log_uniform_values
       max: 0.5 
       min : 0.0001
