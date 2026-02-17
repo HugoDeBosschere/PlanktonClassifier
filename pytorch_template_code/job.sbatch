@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=sweep3
+#SBATCH --job-name=sweep4
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --exclude=sh[00,05,03,10-22]    
+#SBATCH --exclude=sh[00,05,03,10-19]    
 #SBATCH --array=1-1
 
 
@@ -28,14 +28,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp40t9nqh6-config.yml> $TMPDIR/config.yaml
+envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp8ly7rlck-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id de8ff2a784110d73c50f912545ebe384c8f59bfe"
+echo "Checking out the correct version of the code commit_id 4c91bb73ae7079522fe437492add2d49d9f0e04e"
 cd $TMPDIR/code
-git checkout de8ff2a784110d73c50f912545ebe384c8f59bfe
+git checkout 4c91bb73ae7079522fe437492add2d49d9f0e04e
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
