@@ -25,6 +25,7 @@ from . import utils
 
 def train_sweep():
     print("Nouvelle run")
+    print("Nouvelle run, nouveau code, gros gain")
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
