@@ -2,7 +2,7 @@ program: main.py
 name: sweepdemo
 project: WinningKaggle
 entity: hugo-debosschere-are-na
-count: 10
+count: 100
 method: bayes
 metric:
   goal: minimize
@@ -29,7 +29,14 @@ parameters:
       distribution: log_uniform_values
       max: 0.1 
       min : 0.0001
+  optim.params.weigth_decay:
+      distribution: log_uniform_values
+      max: 0.5 
+      min : 0.0001
+  optim.params.amsgrad:
+    values: [True, False]
 
+    
   loss.lossname:
     values: ["FocalLoss","CrossEntropyLoss"]
   loss.is_weighted:
@@ -57,7 +64,7 @@ parameters:
 
   
   model.class:
-    value: PollenNet
+    value: [PollenNet,VanillaCNN]
   model.num_layers:
     values: [3,4,5] 
   model.size_linear :

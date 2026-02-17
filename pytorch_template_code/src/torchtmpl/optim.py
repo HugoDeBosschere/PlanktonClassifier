@@ -9,8 +9,10 @@ import numpy as np
 def get_loss(loss_config, trainpath, device):
     gamma = loss_config["gamma"]
     lossname = loss_config["lossname"]
+    normalized_name = lossname.strip().lower().replace("_", "")
+    print(f"We are using the loss : {normalized_name}")
     focal_loss_set = ("FocalLoss", "focalloss","Focalloss", "focalLoss", "focal_loss", "FocalLoss ")
-    if lossname in focal_loss_set:
+    if normalized_name in focal_loss_set:
         print("We are using a Focal Loss")
         return get_focal_loss(trainpath, device, gamma) 
     return eval(f"nn.{lossname}()")
@@ -54,5 +56,6 @@ def get_focal_loss(trainpath, device, gamma):
 
 def get_optimizer(cfg, params):
     params_dict = cfg["params"]
+    print(f"Le dictionnaire de parametres de {cfg['algo']} est {params_dict}")
     exec(f"global optim; optim = torch.optim.{cfg['algo']}(params, **params_dict)")
     return optim
