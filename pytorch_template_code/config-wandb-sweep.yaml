@@ -64,7 +64,7 @@ parameters:
 
   
   model.class:
-    value: [PollenNet,VanillaCNN]
+    values: [PollenNet,VanillaCNN]
   model.num_layers:
     values: [3,4,5] 
   model.size_linear :
