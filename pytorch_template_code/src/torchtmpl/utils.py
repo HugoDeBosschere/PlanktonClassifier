@@ -207,11 +207,12 @@ def test_f1score(model, loader, num_classes, device):
         # Compute the forward propagation
         outputs = model(inputs)
         outputs = torch.argmax(outputs, dim=1)
+        outputs = outputs.to()
         
         # 2. One-Hot Encode (Creates Float Tensor for arithmetic)
         # Shape: (Batch, Num_Classes)
-        pred_hot = F.one_hot(inputs, num_classes).float()
-        target_hot = F.one_hot(targets, num_classes).float()
+        pred_hot = F.one_hot(outputs.to(long), num_classes).float()
+        target_hot = F.one_hot(targets.to(long), num_classes).float()
 
         # 3. Compute Metrics Vectorized (Sum over Batch Dim -> Shape: (Num_Classes,))
         tp = (pred_hot * target_hot).sum(dim=0)
