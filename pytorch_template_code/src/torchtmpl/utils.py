@@ -192,3 +192,48 @@ def test(model, loader, f_loss, device):
         num_samples += inputs.shape[0]
 
     return total_loss.item() / num_samples
+
+@torch.no_grad()
+def test_f1score(model, loader, device):
+    model.eval()
+    base_dictionnary = {}
+    num_loops = 0
+    eps = 1e-7
+    for (inputs, targets) in loader:
+
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        # Compute the forward propagation
+        outputs = model(inputs)
+        outputs = torch.argmax(outputs, dim=1)
+        
+        # 2. One-Hot Encode (Creates Float Tensor for arithmetic)
+        # Shape: (Batch, Num_Classes)
+        pred_hot = F.one_hot(inputs, num_classes).float()
+        target_hot = F.one_hot(targets, num_classes).float()
+
+        # 3. Compute Metrics Vectorized (Sum over Batch Dim -> Shape: (Num_Classes,))
+        tp = (pred_hot * target_hot).sum(dim=0)
+        
+        # FP = Total Predicted Positive - TP
+        total_pred = pred_hot.sum(dim=0)
+        fp = total_pred - tp
+        
+        # FN = Total Actual Positive - TP
+        total_target = target_hot.sum(dim=0)
+        fn = total_target - tp
+        
+        # 4. Compute Precision and Recall per class
+        # Add epsilon to denominator to avoid NaN
+        precision = tp / (tp + fp + epsilon)
+        recall = tp / (tp + fn + epsilon)
+        
+        # 5. Compute F1 per class
+        f1_per_class = 2 * (precision * recall) / (precision + recall + epsilon)
+        mean_f1 = f1_per_class.mean()
+        num_loops += 1 #Might create a slight imbalance since the last batch may not be of size batch_size but it's probably going to get averaged out and not a big deal since there are so much samples
+        
+        tot_f1 += mean_f1
+
+    # 6. Macro Average (Mean over classes)
+    return tot_f1 / num_loops

@@ -5,8 +5,8 @@ entity: hugo-debosschere-are-na
 count: 100
 method: bayes
 metric:
-  goal: maximize
-  name: f1score
+  goal: minimize
+  name: test_CE
 parameters:
   
   data.trainpath:

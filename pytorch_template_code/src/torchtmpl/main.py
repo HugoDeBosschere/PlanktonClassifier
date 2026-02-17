@@ -94,7 +94,7 @@ def train_sweep():
         with open(logdir / "config.yaml", "w") as file:
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
             yaml.dump(config, file)
-            file.write(f"test:\n    model_path: {os.path.abspath(logdir)}/best_model.pt\n    save_dir: {save_dir}")
+            file.write(f"test:\n    model_path: [{os.path.abspath(logdir)}/best_model.pt,{os.path.abspath(logdir)}/best_model_loss.pt]\n    save_dir: {save_dir}")
 
         # Make a summary script of the experiment
         input_size = next(iter(train_loader))[0].shape
@@ -118,10 +118,15 @@ def train_sweep():
         logging.info(summary_text)
         if wandb_log is not None:
             wandb.log({"summary": summary_text})
-
+        
         # Define the early stopping callback
-        model_checkpoint = utils.ModelCheckpoint(
-            model, str(logdir / "best_model.pt"), min_is_best=True
+        model_checkpoint_f1score = utils.ModelCheckpoint(
+            model, str(logdir / "best_model.pt"), min_is_best=False
+        )
+        
+        # Define the early stopping callback
+        model_checkpoint_loss = utils.ModelCheckpoint(
+            model, str(logdir / "best_model_loss.pt"), min_is_best=True
         )
 
         # Early stopping callback to save the model every 50 epochs even if the test loss is not bettering 
@@ -148,15 +153,32 @@ def train_sweep():
             time_of_test = (time.time() - time_before_test) / 60 
             logging.info(f"This test took {time_of_test} minutes to test")
 
+            # Test f1score
+            time_before_test= time.time()
+            f1score = utils.test_f1score(model, valid_loader, device)
+            time_of_test = (time.time() - time_before_test) / 60 
+            logging.info(f"This test took {time_of_test} minutes to test")
 
-            updated = model_checkpoint.update(test_loss)
+
+            updated_loss = model_checkpoint_loss.update(test_loss)
             logging.info(
                 "[%d/%d] Test loss : %.3f %s"
                 % (
                     e,
                     train_config["nepochs"],
                     test_loss,
-                    "[>> BETTER <<]" if updated else "",
+                    "[>> BETTER LOSS <<]" if updated_loss else "",
+                )
+            )
+
+            updated_score = model_checkpoint_score.update(f1score)
+            logging.info(
+                "[%d/%d] Test loss : %.3f %s"
+                % (
+                    e,
+                    train_config["nepochs"],
+                    f1score,
+                    "[>> BETTER F1SCORE<<]" if updated_score else "",
                 )
             )
 
@@ -173,14 +195,20 @@ def train_sweep():
                 )
                 )
 
-            if updated:
-                logging.info(f"We are logging an artifact !")
-                artifact = wandb.Artifact(name="best-model",type ="model",metadata={"loss" : loss, "epoch" : e})
-                artifact.add_file(model_checkpoint.savepath)
+            if updated_loss:
+                logging.info(f"We are logging an artifact due to loss improvement !")
+                artifact = wandb.Artifact(name="best-model-loss",type ="model",metadata={"loss" : loss, "epoch" : e})
+                artifact.add_file(model_checkpoint_loss.savepath)
+                wandb.log_artifact(artifact)
+            
+            if updated_loss:
+                logging.info(f"We are logging an artifact due to f1score improvement!")
+                artifact = wandb.Artifact(name="best-model-f1score",type ="model",metadata={"loss" : loss, "epoch" : e})
+                artifact.add_file(model_checkpoint_loss.savepath)
                 wandb.log_artifact(artifact)
 
             # Update the dashboard
-            metrics = {"train_CE": train_loss, "test_CE": test_loss}
+            metrics = {"train_CE": train_loss, "test_CE": test_loss, "f1score": f1score}
             if wandb_log is not None:
                 logging.info("Logging on wandb")
                 wandb_log(metrics)
@@ -295,6 +323,7 @@ def train(config):
         model, str(logdir / "best_model.pt"), min_is_best=True
     )
 
+
     # Early stopping callback to save the model every 50 epochs even if the test loss is not bettering 
     model_checkpoint_50_epochs =  utils.ModelCheckpoint(
         model, str(logdir / "last_model.pt"), min_is_best=True
@@ -333,7 +362,7 @@ def train(config):
 
         if e % 50 == 0:
             #calling with -e ensures that the model is saved since -e is strictly decreasing
-            epoch_update = model_checkpoint_50_epochs.update(-e)
+            epoch_update = model_checkpoint_loss_50_epochs.update(-e)
             logging.info(
             "[%d/%d] Test loss : %.3f %s"
             % (
@@ -347,7 +376,7 @@ def train(config):
         if updated:
             logging.info(f"We are logging an artifact !")
             artifact = wandb.Artifact(name="best-model",type ="model",metadata={"loss" : loss, "epoch" : e})
-            artifact.add_file(model_checkpoint.savepath)
+            artifact.add_file(model_checkpoint_loss.savepath)
             wandb.log_artifact(artifact)
 
         # Update the dashboard
@@ -386,35 +415,36 @@ def test(config,send_kaggle_bool=True):
     print("Yay on utilise la nouvelle fonction de test !")
 
     model_name = config["model"]["class"]
-    model_path = config["test"]["model_path"]
-    print(f"We are currently testing the model at {model_path}")
-    save_dir = config["test"]["save_dir"]
-    unique_save_path = utils.generate_unique_csv(save_dir,model_name)
-    print(f"unique save path is {unique_save_path}")
-    test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda)
-    
-    model_config = config["model"]
+    model_path_list = config["test"]["model_path"]
+    for model_path in model_path_list:
+        print(f"We are currently testing the model at {model_path}")
+        save_dir = config["test"]["save_dir"]
+        unique_save_path = utils.generate_unique_csv(save_dir,model_name)
+        print(f"unique save path is {unique_save_path}")
+        test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda)
+        
+        model_config = config["model"]
 
-    model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
-    model.load_state_dict(torch.load(model_path, weights_only=True))
-    model.to(device)
+        model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
+        model.load_state_dict(torch.load(model_path, weights_only=True))
+        model.to(device)
 
-    with open(unique_save_path,"w") as file:
-        model.eval()
-        print(f"fichier crée à l'adresse : {unique_save_path}")
-        i = 0
-        file.write("imgname,label \n")
-        for img, filenames in test_loader:
-            img = img.to(device)
-            logits = model(img)
-            preds = torch.argmax(logits,dim=1) 
-            for pred, filename in zip(preds,filenames):
-                file.write(f"{filename}, {pred.item()} \n")
-                print(filename)
-                i += 1
-    print("Fin du test.")
-    if send_kaggle_bool:
-        send_kaggle(unique_save_path)
+        with open(unique_save_path,"w") as file:
+            model.eval()
+            print(f"fichier crée à l'adresse : {unique_save_path}")
+            i = 0
+            file.write("imgname,label \n")
+            for img, filenames in test_loader:
+                img = img.to(device)
+                logits = model(img)
+                preds = torch.argmax(logits,dim=1) 
+                for pred, filename in zip(preds,filenames):
+                    file.write(f"{filename}, {pred.item()} \n")
+                    print(filename)
+                    i += 1
+        print("Fin du test.")
+        if send_kaggle_bool:
+            send_kaggle(unique_save_path)
     return None
 
 def sweep(sweep_config):
