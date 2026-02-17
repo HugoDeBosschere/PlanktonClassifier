@@ -28,14 +28,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
 #rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmplabnd_ia-config.yml> $TMPDIR/config.yaml
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpy6wfv42_-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id ab906047a39776accc3cb8a6415bd912a57c0a52"
+echo "Checking out the correct version of the code commit_id 5ec8b0dc63080d08e277c3cd008f01836f4ea2a3"
 cd $TMPDIR/code
-git checkout ab906047a39776accc3cb8a6415bd912a57c0a52
+git checkout 5ec8b0dc63080d08e277c3cd008f01836f4ea2a3
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -45,7 +45,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmplabnd_ia-config.yml sweep
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpy6wfv42_-config.yml sweep
 
 if [[ $? != 0 ]]; then
     exit -1

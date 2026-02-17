@@ -8,6 +8,7 @@ import os
 import torch
 import torch.nn
 import tqdm
+import torch.nn.functionnal as F 
 #import time 
 
 def unflatten_config(flat_config):
