@@ -155,7 +155,7 @@ def train_sweep():
 
             # Test f1score
             time_before_test= time.time()
-            f1score = utils.test_f1score(model, valid_loader, device)
+            f1score = utils.test_f1score(model, valid_loader, num_classes, device)
             time_of_test = (time.time() - time_before_test) / 60 
             logging.info(f"This test took {time_of_test} minutes to test")
 

@@ -195,7 +195,7 @@ def test(model, loader, f_loss, device):
     return total_loss.item() / num_samples
 
 @torch.no_grad()
-def test_f1score(model, loader, device):
+def test_f1score(model, loader, num_classes, device):
     model.eval()
     base_dictionnary = {}
     num_loops = 0
