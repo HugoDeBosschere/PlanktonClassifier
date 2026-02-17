@@ -10,9 +10,9 @@ metric:
 parameters:
   
   data.trainpath:
-    value: '$TMPDIR/dataset/train'
+    value: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
   data.testpath:
-    value: '$TMPDIR/dataset/test'
+    value: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
   data.batch_size:
     values: [2048,4096]
   data.num_workers:
@@ -50,9 +50,9 @@ parameters:
 
   
   logging.logdir:
-    value: "~/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+    value: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
   logging.save_dir :
-    value: "/raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test"
+    value: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
 
 
   
