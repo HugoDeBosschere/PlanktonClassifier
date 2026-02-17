@@ -197,45 +197,44 @@ def test(model, loader, f_loss, device):
 @torch.no_grad()
 def test_f1score(model, loader, num_classes, device):
     model.eval()
-    base_dictionnary = {}
-    num_loops = 0
+    
+    # Initialize accumulators for global counts (Not per-batch averaging!)
+    total_tp = torch.zeros(num_classes, device=device)
+    total_fp = torch.zeros(num_classes, device=device)
+    total_fn = torch.zeros(num_classes, device=device)
+    
     eps = 1e-7
-    for (inputs, targets) in loader:
 
+    for inputs, targets in loader:
         inputs, targets = inputs.to(device), targets.to(device)
 
-        # Compute the forward propagation
+        # 1. Forward Pass
         outputs = model(inputs)
-        outputs = torch.argmax(outputs, dim=1)
-        outputs = outputs.to()
         
-        # 2. One-Hot Encode (Creates Float Tensor for arithmetic)
-        # Shape: (Batch, Num_Classes)
-        pred_hot = F.one_hot(outputs.to(long), num_classes).float()
-        target_hot = F.one_hot(targets.to(long), num_classes).float()
+        # 2. Get Predictions (Argmax)
+        preds = torch.argmax(outputs, dim=1) # Shape: (Batch_Size,)
 
-        # 3. Compute Metrics Vectorized (Sum over Batch Dim -> Shape: (Num_Classes,))
+        # 3. One-Hot Encode
+        # Ensure strict Long type for one_hot
+        pred_hot = F.one_hot(preds.to(torch.long), num_classes).float()
+        target_hot = F.one_hot(targets.to(torch.long), num_classes).float()
+
+        # 4. Update Global Counts (Sum over batch)
+        # We accumulate TP, FP, FN over the ENTIRE dataset
         tp = (pred_hot * target_hot).sum(dim=0)
+        fp = (pred_hot * (1 - target_hot)).sum(dim=0)
+        fn = ((1 - pred_hot) * target_hot).sum(dim=0)
         
-        # FP = Total Predicted Positive - TP
-        total_pred = pred_hot.sum(dim=0)
-        fp = total_pred - tp
-        
-        # FN = Total Actual Positive - TP
-        total_target = target_hot.sum(dim=0)
-        fn = total_target - tp
-        
-        # 4. Compute Precision and Recall per class
-        # Add epsilon to denominator to avoid NaN
-        precision = tp / (tp + fp + epsilon)
-        recall = tp / (tp + fn + epsilon)
-        
-        # 5. Compute F1 per class
-        f1_per_class = 2 * (precision * recall) / (precision + recall + epsilon)
-        mean_f1 = f1_per_class.mean()
-        num_loops += 1 #Might create a slight imbalance since the last batch may not be of size batch_size but it's probably going to get averaged out and not a big deal since there are so much samples
-        
-        tot_f1 += mean_f1
+        total_tp += tp
+        total_fp += fp
+        total_fn += fn
 
-    # 6. Macro Average (Mean over classes)
-    return tot_f1 / num_loops
+    # 5. Compute Metrics GLOBALLY (Once, at the end)
+    # This avoids the "last batch size" bias and mathematical averaging errors
+    precision = total_tp / (total_tp + total_fp + eps)
+    recall = total_tp / (total_tp + total_fn + eps)
+    
+    f1_per_class = 2 * (precision * recall) / (precision + recall + eps)
+    
+    # 6. Macro Average
+    return f1_per_class.mean().item()
