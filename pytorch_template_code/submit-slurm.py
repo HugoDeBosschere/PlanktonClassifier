@@ -34,10 +34,10 @@ rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycac
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-echo "Copying the dataset to have faster access to the samples"
-mkdir $TMPDIR/dataset
-rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst <{configpath}> $TMPDIR/config.yaml
+#echo "Copying the dataset to have faster access to the samples"
+#mkdir $TMPDIR/dataset
+#rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+#envsubst <{configpath}> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml

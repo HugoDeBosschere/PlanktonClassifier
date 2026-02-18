@@ -19,8 +19,8 @@ import time
 import timm
 from timm.data import resolve_data_config
 from timm.data.transforms_factory import create_transform #To import pre-trained models, even models already trained at recognizing plankton  
-import PIL #for image pre-processing
-from PIL import Image 
+import PIL #for image pre-processing. I think it's useless but I do want to break the code
+from PIL import Image #Same
 
 # Local imports
 from . import data

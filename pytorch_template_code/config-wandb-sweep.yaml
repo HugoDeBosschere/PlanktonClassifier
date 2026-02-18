@@ -7,6 +7,12 @@ method: bayes
 metric:
   goal: maximize
   name: f1score
+
+early_terminate:
+  type: hyperband  #Pour accèlerer les wandb sweeps 
+  min_iter: 1 
+  eta: 3 #3 est agressif mais essayons ça pour l'instant 
+
 parameters:
   
   data.trainpath:
