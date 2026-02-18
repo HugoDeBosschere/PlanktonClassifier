@@ -1,7 +1,7 @@
 data:
   trainpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
   testpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
-  batch_size: 128
+  batch_size: 16
   num_workers: 8
   valid_ratio: 0.2
   is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler

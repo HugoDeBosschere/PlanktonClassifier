@@ -150,7 +150,7 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
         num_samples += inputs.shape[0]
         if dynamic_display:
             pbar.set_description(f"Train loss : {loss/num_samples:.2f}")
-        if not dynamic_display and (i%100) == 0 and i != 0:
+        if not dynamic_display and (i%1000) == 0 and i != 0:
             #time_end_minibatch = time.time()
 
             print(f"{i / len_dataset}% of the training done. Loss at this minibatch : {loss}, total loss since the beginning of the epoch : {total_loss.item()}, total loss per input since the beginning of the epoch : {total_loss.item() / num_samples }")
