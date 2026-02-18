@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=sweep10
+#SBATCH --job-name=autosend
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --exclude=sh[00,01,05,03,10-19,20]    
+#SBATCH --exclude=sh[00,05,03,10-22]    
 #SBATCH --array=1-1
 
 
@@ -25,17 +25,17 @@ rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycac
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-#echo "Copying the dataset to have faster access to the samples"
-#mkdir $TMPDIR/dataset
-#rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp0u4icsyr-config.yml> $TMPDIR/config.yaml
+echo "Copying the dataset to have faster access to the samples"
+mkdir $TMPDIR/dataset
+rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp3ci04f94-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id f9e6883ba1e0464a7f2f1be387560232a59a289e"
+echo "Checking out the correct version of the code commit_id 4968ddfa184b1195f44739219c5f1e2604b8b2cc"
 cd $TMPDIR/code
-git checkout f9e6883ba1e0464a7f2f1be387560232a59a289e
+git checkout 4968ddfa184b1195f44739219c5f1e2604b8b2cc
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -45,7 +45,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp0u4icsyr-config.yml sweep
+python -m torchtmpl.main $TMPDIR/config.yaml train
 
 if [[ $? != 0 ]]; then
     exit -1
