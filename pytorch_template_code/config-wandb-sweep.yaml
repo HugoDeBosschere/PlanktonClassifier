@@ -43,7 +43,7 @@ parameters:
     values: [True, False] 
   loss.gamma:
     distribution: uniform
-    max: 10
+    max: 5
     min: 1
 
 
@@ -68,7 +68,7 @@ parameters:
   model.num_layers:
     values: [3,4,5] 
   model.size_linear :
-    values: [256,521,1024]
+    values: [256,512,1024]
   model.prob_droupout:
     min: 0.0 
     max : 0.99
