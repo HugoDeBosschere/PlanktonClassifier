@@ -28,6 +28,8 @@ from . import models
 from . import optim
 from . import utils
 
+NUM_CLASSES = 86
+
 def train_sweep():
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
@@ -250,7 +252,7 @@ def train(config):
 
     train_config = config["train"]
 
-    
+    num_classes = NUM_CLASSES
 
     # Build the model
     logging.info("= Model")
