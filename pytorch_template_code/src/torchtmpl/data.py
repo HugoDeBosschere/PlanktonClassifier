@@ -14,6 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+
 def show_image(X):
     num_c = X.shape[0]
     plt.figure()
@@ -58,16 +59,19 @@ def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset, indi
     return b_sampler
 
 
-def get_dataloaders(data_config, use_cuda):
+def get_dataloaders(data_config, use_cuda,transform=None):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
     num_workers = data_config["num_workers"]
     is_batch_weighted = data_config["is_batch_weighted"]
     logging.info("  - Dataset creation")
 
-    input_transform = transforms.Compose(
-        [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
-    )
+    if transform:
+        input_transform = transform
+    else: 
+        input_transform = transforms.Compose(
+            [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+        )
 
     base_dataset = torchvision.datasets.ImageFolder(
         root=data_config["trainpath"],

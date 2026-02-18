@@ -16,7 +16,10 @@ import torch
 import torchinfo.torchinfo as torchinfo
 import tqdm
 import time
-import timm  
+import timm
+from timm.data import resolve_data_config
+from timm.data.transforms_factory import create_transform #To import pre-trained models, even models already trained at recognizing plankton  
+import PIL #for image pre-processing
 
 # Local imports
 from . import data
@@ -42,25 +45,30 @@ def train_sweep():
 
         train_config = config["train"]
 
+        
+
+        # Build the model
+        logging.info("= Model")
+        model_config = config["model"]
+        transform = None 
+
         # Build the dataloaders
         logging.info("= Building the dataloaders")
         data_config = config["data"]
         batch_size = data_config["batch_size"]
 
         train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-            data_config, use_cuda
+            data_config, use_cuda, transform=transform
         )
 
-        # Build the model
-        logging.info("= Model")
-        model_config = config["model"]
         model = models.build_model(model_config, input_size, num_classes)
         if "old_model_path" in model_config:
             old_model_path = model_config["old_model_path"]
             logging.info(f"Loading model at {old_model_path}")
-            model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
+            model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))        
         model.to(device)
 
+        
 
         # Build the loss
         logging.info("= Loss")

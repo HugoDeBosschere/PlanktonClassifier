@@ -30,5 +30,7 @@ model:
   num_layers: 1 
   size_linear : 1024
   prob_droupout : 0.5
+  pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  pretrained_in_color: True
   #old_model_path : None #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
