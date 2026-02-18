@@ -15,7 +15,8 @@ import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
 import tqdm
-import time 
+import time
+import timm  
 
 # Local imports
 from . import data
@@ -171,7 +172,7 @@ def train_sweep():
                 )
             )
 
-            updated_score = model_checkpoint_score.update(f1score)
+            updated_score = model_checkpoint_f1score.update(f1score)
             logging.info(
                 "[%d/%d] Test loss : %.3f %s"
                 % (
@@ -197,14 +198,14 @@ def train_sweep():
 
             if updated_loss:
                 logging.info(f"We are logging an artifact due to loss improvement !")
-                artifact = wandb.Artifact(name="best-model-loss",type ="model",metadata={"loss" : loss, "epoch" : e})
+                artifact = wandb.Artifact(name="best-model-loss",type ="model",metadata={"loss" : test_loss, "epoch" : e})
                 artifact.add_file(model_checkpoint_loss.savepath)
                 wandb.log_artifact(artifact)
             
-            if updated_loss:
+            if updated_score:
                 logging.info(f"We are logging an artifact due to f1score improvement!")
-                artifact = wandb.Artifact(name="best-model-f1score",type ="model",metadata={"loss" : loss, "epoch" : e})
-                artifact.add_file(model_checkpoint_loss.savepath)
+                artifact = wandb.Artifact(name="best-model-f1score",type ="model",metadata={"score" : f1score, "epoch" : e})
+                artifact.add_file(model_checkpoint_f1score.savepath)
                 wandb.log_artifact(artifact)
 
             # Update the dashboard
