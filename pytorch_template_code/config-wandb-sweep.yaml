@@ -14,7 +14,7 @@ parameters:
   data.testpath:
     value: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
   data.batch_size:
-    values: [1024,2048]
+    value: 128
   data.num_workers:
     value: 8
   data.valid_ratio:

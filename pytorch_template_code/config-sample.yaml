@@ -1,7 +1,7 @@
 data:
   trainpath: '$TMPDIR/dataset/train'
   testpath: '$TMPDIR/dataset/test'
-  batch_size: 2048
+  batch_size: 128
   num_workers: 8
   valid_ratio: 0.2
   is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler
@@ -12,7 +12,7 @@ optim:
     lr: 0.001
     
 train:
-  nepochs: 1
+  nepochs: 100
   loss: "CrossEntropyLoss"
   is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   test_end_train: True

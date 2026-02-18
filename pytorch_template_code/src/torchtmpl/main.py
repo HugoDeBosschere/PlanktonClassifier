@@ -20,6 +20,7 @@ import timm
 from timm.data import resolve_data_config
 from timm.data.transforms_factory import create_transform #To import pre-trained models, even models already trained at recognizing plankton  
 import PIL #for image pre-processing
+from PIL import Image 
 
 # Local imports
 from . import data
@@ -258,7 +259,7 @@ def train(config):
 
     if "pretrained_path" in model_config:
         logging.info("using a pretrained model") 
-        model = timm.create_model(model_config["pretrained_path"], pretrained=True)
+        model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
         transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
         pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
         if pretrained_in_color:
@@ -271,10 +272,11 @@ def train(config):
     batch_size = data_config["batch_size"]
 
     train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-        data_config, use_cuda
+        data_config, use_cuda, transform=transform
     )
 
     if not "pretrained_path" in model_config:
+        logging.info("We are not using a pretrained model ie custom model !")
         model = models.build_model(model_config, input_size, num_classes)
         if "old_model_path" in model_config:
             old_model_path = model_config["old_model_path"]
