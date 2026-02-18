@@ -25,17 +25,17 @@ rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycac
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-echo "Copying the dataset to have faster access to the samples"
-mkdir $TMPDIR/dataset
-rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpebwec2rb-config.yml> $TMPDIR/config.yaml
+#echo "Copying the dataset to have faster access to the samples"
+#mkdir $TMPDIR/dataset
+#rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpdydsi002-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 5cd2a516103a1d2ca13f54c901f020c875b8c83f"
+echo "Checking out the correct version of the code commit_id dae50b2282ba679e1448580c8fe014664efde952"
 cd $TMPDIR/code
-git checkout 5cd2a516103a1d2ca13f54c901f020c875b8c83f
+git checkout dae50b2282ba679e1448580c8fe014664efde952
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
