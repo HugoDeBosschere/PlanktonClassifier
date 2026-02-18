@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=pretrained
+#SBATCH --job-name=sweep10
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
@@ -28,14 +28,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
 #rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpdydsi002-config.yml> $TMPDIR/config.yaml
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp8ujgu6zl-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id dae50b2282ba679e1448580c8fe014664efde952"
+echo "Checking out the correct version of the code commit_id 779336eddd04402b1e994469a9a51a1429b090d5"
 cd $TMPDIR/code
-git checkout dae50b2282ba679e1448580c8fe014664efde952
+git checkout 779336eddd04402b1e994469a9a51a1429b090d5
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -45,7 +45,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp8ujgu6zl-config.yml train
 
 if [[ $? != 0 ]]; then
     exit -1

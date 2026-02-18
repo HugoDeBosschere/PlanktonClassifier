@@ -14,6 +14,7 @@ import yaml
 import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
+from torchvision import transforms
 import tqdm
 import time
 import timm

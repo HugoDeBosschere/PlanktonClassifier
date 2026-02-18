@@ -2,16 +2,17 @@ program: main.py
 name: sweepdemo
 project: WinningKaggle
 entity: hugo-debosschere-are-na
-count: 100
-method: bayes
+count: 132
+method: random
 metric:
   goal: maximize
   name: f1score
 
 early_terminate:
   type: hyperband  #Pour accèlerer les wandb sweeps 
-  min_iter: 1 
-  eta: 3 #3 est agressif mais essayons ça pour l'instant 
+  min_iter: 2 
+  eta: 2 #3 est agressif mais essayons ça pour l'instant 
+  max_iter: 128
 
 parameters:
   
@@ -55,7 +56,7 @@ parameters:
 
   
   train.nepochs: 
-    values: 200
+    value: 128
   train.is_weighted:
     values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
@@ -78,8 +79,8 @@ parameters:
   model.prob_droupout:
     min: 0.0 
     max : 0.99
-  model.pretrained_path:
-    value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  #model.pretrained_path:
+    #value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
   model.pretrained_in_color:
     value: True 
   #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
