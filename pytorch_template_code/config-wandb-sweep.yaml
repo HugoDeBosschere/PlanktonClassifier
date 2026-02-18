@@ -3,7 +3,7 @@ name: sweepdemo
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
-method: random
+method: random 
 metric:
   goal: maximize
   name: f1score
