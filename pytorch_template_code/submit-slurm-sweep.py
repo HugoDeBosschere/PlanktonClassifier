@@ -55,7 +55,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main {configpath} sweep
+python -m torchtmpl.main {configpath} launch_agent
 
 if [[ $? != 0 ]]; then
     exit -1

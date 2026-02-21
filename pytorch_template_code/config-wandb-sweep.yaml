@@ -1,5 +1,5 @@
 program: main.py
-name: sweepdemo
+name: hyperbandtest
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132

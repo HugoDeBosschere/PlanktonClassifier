@@ -476,13 +476,16 @@ def test(config,send_kaggle_bool=True):
             send_kaggle(unique_save_path)
     return None
 
-def sweep(sweep_config):
+def create_sweep(sweep_config):
     project = config["project"]
     entity = config["entity"]
     count = config["count"]
     sweep_id = wandb.sweep(sweep = sweep_config,project = project, entity = entity)
     wandb.agent(sweep_id = sweep_id, function = train_sweep, count= count)
 
+def launch_agent(config):
+    sweep_id = config["first_sweep_id"]
+    wandb.agent(sweep_id = sweep_id, function = train_sweep)
 
 if __name__ == "__main__":
     
