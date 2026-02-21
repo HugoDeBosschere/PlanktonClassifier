@@ -9,14 +9,14 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
-#SBATCH --job-name=hyperband
+#SBATCH --job-name=hyper
 #SBATCH --cpus-per-task=8
 #SBATCH --nodes=1
 #SBATCH --partition=gpu_prod_long
 #SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --exclude=sh[00,01,05,03,09,10-19,20-22]    
+#SBATCH --exclude=sh[00,01,05,03,09,10-19,20-22,08]    
 #SBATCH --array=1-{nruns}
 
 
