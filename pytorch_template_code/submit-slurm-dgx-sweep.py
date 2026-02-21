@@ -9,6 +9,8 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
+#SBATCH --mem=128G
+#SBATCH --cpus-per-task=64
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:nvidia_a100_3g-40gb
 #SBATCH --job-name=40hypers1
