@@ -59,7 +59,7 @@ def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset, indi
     return b_sampler
 
 
-def get_dataloaders(data_config, use_cuda,transform=None):
+def get_dataloaders(data_config, use_cuda,transform=None,tmp_trainpath=None):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
     num_workers = data_config["num_workers"]
@@ -73,8 +73,13 @@ def get_dataloaders(data_config, use_cuda,transform=None):
             [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
         )
 
+    if tmp_trainpath:
+        trainpath = tmp_trainpath
+    else:
+        trainpath = data_config["trainpath"]
+
     base_dataset = torchvision.datasets.ImageFolder(
-        root=data_config["trainpath"],
+        root=trainpath,
         transform=input_transform
     )
 
@@ -167,12 +172,17 @@ class TestDataset(datasets.ImageFolder):
         
         return image, filename
 
-def get_test_dataloaders(config, use_cuda): 
+def get_test_dataloaders(config, use_cuda, tmp_testpath=None): 
 
     data_config = config['data']
     batch_size = data_config['batch_size']
     num_workers = data_config['num_workers']
-    test_path = data_config['testpath']
+    
+    if tmp_testpath:
+        test_path = tmp_testpath
+    else:
+        test_path = data_config['testpath']
+        
     batch_size = data_config["batch_size"]
 
     
