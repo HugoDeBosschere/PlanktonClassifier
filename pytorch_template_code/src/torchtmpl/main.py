@@ -8,6 +8,7 @@ import pathlib
 import subprocess # To be able to send the results directly to kaggle 
 import datetime # To enrich the log files and now when the training was launched
 import sys
+import signal
 
 # External imports
 import yaml
@@ -30,6 +31,11 @@ from . import optim
 from . import utils
 
 NUM_CLASSES = 86
+
+def force_hard_exit(signal,frame):
+    logging.warning("Signal reçu, on tue le processus de manière propre !")
+    os._exit(0)
+
 
 def train_sweep():
     print("Nouvelle run")
@@ -159,6 +165,10 @@ def train_sweep():
             logging.info("We are running in a dynamic environment (the tqdm bar will be shown)")
         else:
             logging.info("We are not running in an interactive environment so to speed up training, the tqdm bar will not be shown")
+        
+        signal.signal(signal.SIGTERM, force_hard_exit)
+        signal.signal(signal.SIGINT, force_hard_exit)
+        
         for e in range(train_config["nepochs"]):
             logging.info("Entering a new epoch")
             # Train 1 epoch
