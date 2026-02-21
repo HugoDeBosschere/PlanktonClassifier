@@ -9,12 +9,12 @@ import tempfile
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 #SBATCH --mem=64G
-#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=64
-#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
+#SBATCH --ntasks=1
+#SBATCH --gres=gpu:nvidia_a100_3g.40gb
 #SBATCH --job-name=40hypers
 #SBATCH --nodes=1
-#SBATCH --partition=prod80
+#SBATCH --partition=prod40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
