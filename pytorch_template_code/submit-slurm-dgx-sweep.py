@@ -11,8 +11,8 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --mem=64G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=64
-#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
-#SBATCH --job-name=hyperband
+#SBATCH --gres=gpu:nvidia_a100_3g.40gb:1
+#SBATCH --job-name=40hyper
 #SBATCH --nodes=1
 #SBATCH --partition=prod80
 #SBATCH --time=24:00:00
