@@ -32,11 +32,6 @@ from . import utils
 
 NUM_CLASSES = 86
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> refs/remotes/origin/dev_hugo
 def train_sweep(tmp_testpath=None, tmp_trainpath=None):
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
