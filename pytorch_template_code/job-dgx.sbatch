@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_1g-10gb:1
+#SBATCH --gres=gpu:nvidia_a100_4g-10gb:1
 #SBATCH --job-name=40hypers1
 #SBATCH --nodes=1
 #SBATCH --partition=prod10
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --array=1-3
+#SBATCH --array=1-2
 
 
 current_dir=`pwd`
@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpied5tb_r-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpx6_2_140-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 1abde60fa733f2945c2a7dc1ab4ce94ed2ede0cb"
+echo "Checking out the correct version of the code commit_id 9da1388eed758b0651c0a294b3a7b0fccdf5a8bd"
 cd $TMPDIR/code
-git checkout 1abde60fa733f2945c2a7dc1ab4ce94ed2ede0cb
+git checkout 9da1388eed758b0651c0a294b3a7b0fccdf5a8bd
 
 echo "Setting up the virtual environment"
 python3 -m venv venv

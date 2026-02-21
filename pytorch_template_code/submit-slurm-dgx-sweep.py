@@ -10,10 +10,10 @@ def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 #SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_4g-10gb:1
+#SBATCH --gres=gpu:nvidia_a100_3g-40gb
 #SBATCH --job-name=40hypers1
 #SBATCH --nodes=1
-#SBATCH --partition=prod10
+#SBATCH --partition=prod40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
