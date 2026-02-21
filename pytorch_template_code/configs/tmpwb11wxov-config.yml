@@ -1,0 +1,87 @@
+program: main.py
+name: sweepdemo
+project: WinningKaggle
+entity: hugo-debosschere-are-na
+count: 132
+method: random 
+metric:
+  goal: maximize
+  name: f1score
+
+early_terminate:
+  type: hyperband  #Pour accèlerer les wandb sweeps 
+  min_iter: 2 
+  eta: 2 #3 est agressif mais essayons ça pour l'instant 
+  max_iter: 128
+
+parameters:
+  
+  data.trainpath:
+    value: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
+  data.testpath:
+    value: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
+  data.batch_size:
+    value: 128
+  data.num_workers:
+    value: 8
+  data.valid_ratio:
+    value: 0.2
+  data.is_batch_weighted :
+    value: False #If True, The dataloader are initialized with a RandomWeightedSampler
+
+  
+  optim.algo:
+    value : AdamW
+  optim.params.lr:
+      distribution: log_uniform_values
+      max: 0.1 
+      min : 0.0001
+  optim.params.weight_decay:
+      distribution: log_uniform_values
+      max: 0.5 
+      min : 0.0001
+  optim.params.amsgrad:
+    values: [True, False]
+
+    
+  loss.lossname:
+    values: ["FocalLoss","CrossEntropyLoss"]
+  loss.is_weighted:
+    values: [True, False] 
+  loss.gamma:
+    distribution: uniform
+    max: 5
+    min: 1
+
+
+  
+  train.nepochs: 
+    value: 128
+  train.is_weighted:
+    values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+  train.test_end_train:
+    value: True
+
+  
+  logging.logdir:
+    value: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+  logging.save_dir :
+    value: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
+
+
+  
+  model.class:
+    values: [PollenNet,VanillaCNN]
+  model.num_layers:
+    values: [3,4,5] 
+  model.size_linear :
+    values: [256,512,1024]
+  model.prob_droupout:
+    min: 0.0 
+    max : 0.99
+  #model.pretrained_path:
+    #value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  model.pretrained_in_color:
+    value: True 
+  #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
+  

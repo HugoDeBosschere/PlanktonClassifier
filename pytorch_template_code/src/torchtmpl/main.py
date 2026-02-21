@@ -186,7 +186,7 @@ def train_sweep():
 
             updated_score = model_checkpoint_f1score.update(f1score)
             logging.info(
-                "[%d/%d] Test loss : %.3f %s"
+                "[%d/%d] F1 SCORE : %.3f %s"
                 % (
                     e,
                     train_config["nepochs"],
@@ -391,7 +391,7 @@ def train(config):
 
         if e % 50 == 0:
             #calling with -e ensures that the model is saved since -e is strictly decreasing
-            epoch_update = model_checkpoint_loss_50_epochs.update(-e)
+            epoch_update = model_checkpoint_50_epochs.update(-e)
             logging.info(
             "[%d/%d] Test loss : %.3f %s"
             % (
