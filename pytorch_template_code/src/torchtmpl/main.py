@@ -8,6 +8,7 @@ import pathlib
 import subprocess # To be able to send the results directly to kaggle 
 import datetime # To enrich the log files and now when the training was launched
 import sys
+from functools import partial
 import signal
 
 # External imports
@@ -515,6 +516,7 @@ def launch_agent(config):
         tmp_testpath = config["tmp_testpath"]
     if "tmp_trainpath" in config:
         tmp_trainpath = config["tmp_trainpath"]
+        
     wandb.agent(sweep_id = sweep_id, function = train_sweep(tmp_trainpath = tmp_trainpath, tmp_testpath = tmp_testpath))
 
 if __name__ == "__main__":
