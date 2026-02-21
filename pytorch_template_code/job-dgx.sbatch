@@ -8,7 +8,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --array=1-1
+#SBATCH --array=1-2
 
 
 current_dir=`pwd`
@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpakpe2zhk-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpycig49uk-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 36f4110b3609c348e12a960f38c16698490e05cb"
+echo "Checking out the correct version of the code commit_id e618878ca7833aa449b0947a2a50f8901b0e4a1a"
 cd $TMPDIR/code
-git checkout 36f4110b3609c348e12a960f38c16698490e05cb
+git checkout e618878ca7833aa449b0947a2a50f8901b0e4a1a
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
