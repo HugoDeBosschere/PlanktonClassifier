@@ -12,7 +12,7 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --cpus-per-task=64
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:nvidia_a100_3g.40gb
-#SBATCH --job-name=80hypers
+#SBATCH --job-name=40hypers2
 #SBATCH --nodes=1
 #SBATCH --partition=prod40
 #SBATCH --time=24:00:00
