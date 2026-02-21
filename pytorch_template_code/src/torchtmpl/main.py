@@ -8,6 +8,7 @@ import pathlib
 import subprocess # To be able to send the results directly to kaggle 
 import datetime # To enrich the log files and now when the training was launched
 import sys
+from functools import partial
 
 # External imports
 import yaml
@@ -84,9 +85,9 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         focal_loss_set = ("FocalLoss", "focalloss","Focalloss", "focalLoss", "focal_loss", "FocalLoss ")
         if normalized_name in focal_loss_set:
             logging.info("We are using a Focal Loss")
-            loss = optim.get_focal_loss(config["data"]["trainpath"], device, loss_config["gamma"])
+            loss = optim.get_focal_loss(config["data"]["trainpath"], device, loss_config["gamma"],tmp_trainpath=tmp_trainpath)
         elif is_weighted:
-            loss = optim.get_weighted_loss(lossname, config["data"]["trainpath"],device)
+            loss = optim.get_weighted_loss(lossname, config["data"]["trainpath"],device,tmp_trainpath=tmp_trainpath)
             logging.info("We are using a weighted loss")
         else:
             loss = optim.get_loss(loss_config, config["data"]["trainpath"],device )
@@ -494,10 +495,13 @@ def launch_agent(config):
     sweep_id = config["first_sweep_id"]
     print(sweep_id)
     if "tmp_testpath" in config:
+        print(f"tmp_testpath existe : {tmp_testpath}")
         tmp_testpath = config["tmp_testpath"]
     if "tmp_trainpath" in config:
+        print(f"tmp_trainpath existe : {tmp_trainpath}")
         tmp_trainpath = config["tmp_trainpath"]
-    wandb.agent(sweep_id=sweep_id, function=lambda: train_sweep(tmp_trainpath=tmp_trainpath, tmp_testpath=tmp_testpath))
+    bound_train_function = partial(train_sweep, tmp_trainpath=tmp_trainpath, tmp_testpath=tmp_testpath)
+    wandb.agent(sweep_id=sweep_id, function=bound_train_function)
 
 if __name__ == "__main__":
     
