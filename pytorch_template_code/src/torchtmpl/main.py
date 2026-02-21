@@ -32,6 +32,11 @@ from . import utils
 
 NUM_CLASSES = 86
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> refs/remotes/origin/dev_hugo
 def train_sweep(tmp_testpath=None, tmp_trainpath=None):
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
@@ -160,86 +165,101 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             logging.info("We are running in a dynamic environment (the tqdm bar will be shown)")
         else:
             logging.info("We are not running in an interactive environment so to speed up training, the tqdm bar will not be shown")
-        for e in range(train_config["nepochs"]):
-            logging.info("Entering a new epoch")
-            # Train 1 epoch
-            time_before_training = time.time()
-            train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size)
-            time_of_training = (time.time() - time_before_training )/60
-            logging.info(f"This epoch took {time_of_training} minutes to train")
+        
+        
+        try:
+            for e in range(train_config["nepochs"]):
+                logging.info("Entering a new epoch")
+                # Train 1 epoch
+                time_before_training = time.time()
+                train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size)
+                time_of_training = (time.time() - time_before_training )/60
+                logging.info(f"This epoch took {time_of_training} minutes to train")
 
-            # Test
-            time_before_test= time.time()
-            test_loss = utils.test(model, valid_loader, loss, device)
-            time_of_test = (time.time() - time_before_test) / 60 
-            logging.info(f"This test took {time_of_test} minutes to test")
+                # Test
+                time_before_test= time.time()
+                test_loss = utils.test(model, valid_loader, loss, device)
+                time_of_test = (time.time() - time_before_test) / 60 
+                logging.info(f"This test took {time_of_test} minutes to test")
 
-            # Test f1score
-            time_before_test= time.time()
-            f1score = utils.test_f1score(model, valid_loader, num_classes, device)
-            time_of_test = (time.time() - time_before_test) / 60 
-            logging.info(f"This test took {time_of_test} minutes to test")
+                # Test f1score
+                time_before_test= time.time()
+                f1score = utils.test_f1score(model, valid_loader, num_classes, device)
+                time_of_test = (time.time() - time_before_test) / 60 
+                logging.info(f"This test took {time_of_test} minutes to test")
 
 
-            updated_loss = model_checkpoint_loss.update(test_loss)
-            logging.info(
-                "[%d/%d] Test loss : %.3f %s"
-                % (
-                    e,
-                    train_config["nepochs"],
-                    test_loss,
-                    "[>> BETTER LOSS <<]" if updated_loss else "",
-                )
-            )
-
-            updated_score = model_checkpoint_f1score.update(f1score)
-            logging.info(
-                "[%d/%d] F1 SCORE : %.3f %s"
-                % (
-                    e,
-                    train_config["nepochs"],
-                    f1score,
-                    "[>> BETTER F1SCORE<<]" if updated_score else "",
-                )
-            )
-
-            if e % 50 == 0:
-                #calling with -e ensures that the model is saved since -e is strictly decreasing
-                epoch_update = model_checkpoint_50_epochs.update(-e)
+                updated_loss = model_checkpoint_loss.update(test_loss)
                 logging.info(
-                "[%d/%d] Test loss : %.3f %s"
-                % (
-                    e,
-                    train_config["nepochs"],
-                    test_loss,
-                    "[>> LATEST <<]" if epoch_update else "",
+                    "[%d/%d] Test loss : %.3f %s"
+                    % (
+                        e,
+                        train_config["nepochs"],
+                        test_loss,
+                        "[>> BETTER LOSS <<]" if updated_loss else "",
+                    )
                 )
+
+                updated_score = model_checkpoint_f1score.update(f1score)
+                logging.info(
+                    "[%d/%d] F1 SCORE : %.3f %s"
+                    % (
+                        e,
+                        train_config["nepochs"],
+                        f1score,
+                        "[>> BETTER F1SCORE<<]" if updated_score else "",
+                    )
                 )
 
-            if updated_loss:
-                logging.info(f"We are logging an artifact due to loss improvement !")
-                artifact = wandb.Artifact(name="best-model-loss",type ="model",metadata={"loss" : test_loss, "epoch" : e})
-                artifact.add_file(model_checkpoint_loss.savepath)
-                wandb.log_artifact(artifact)
-            
-            if updated_score:
-                logging.info(f"We are logging an artifact due to f1score improvement!")
-                artifact = wandb.Artifact(name="best-model-f1score",type ="model",metadata={"score" : f1score, "epoch" : e})
-                artifact.add_file(model_checkpoint_f1score.savepath)
-                wandb.log_artifact(artifact)
+                if e % 50 == 0:
+                    #calling with -e ensures that the model is saved since -e is strictly decreasing
+                    epoch_update = model_checkpoint_50_epochs.update(-e)
+                    logging.info(
+                    "[%d/%d] Test loss : %.3f %s"
+                    % (
+                        e,
+                        train_config["nepochs"],
+                        test_loss,
+                        "[>> LATEST <<]" if epoch_update else "",
+                    )
+                    )
 
-            # Update the dashboard
-            metrics = {"train_CE": train_loss, "test_CE": test_loss, "f1score": f1score}
-            if wandb_log is not None:
-                logging.info("Logging on wandb")
-                wandb_log(metrics)
+                if updated_loss:
+                    logging.info(f"We are logging an artifact due to loss improvement !")
+                    artifact = wandb.Artifact(name="best-model-loss",type ="model",metadata={"loss" : test_loss, "epoch" : e})
+                    artifact.add_file(model_checkpoint_loss.savepath)
+                    wandb.log_artifact(artifact)
+                
+                if updated_score:
+                    logging.info(f"We are logging an artifact due to f1score improvement!")
+                    artifact = wandb.Artifact(name="best-model-f1score",type ="model",metadata={"score" : f1score, "epoch" : e})
+                    artifact.add_file(model_checkpoint_f1score.savepath)
+                    wandb.log_artifact(artifact)
 
-        if train_config["test_end_train"]:
-            logging.info("Envoi automatique du fichier")
-            with open(logdir / "config.yaml", "r") as file:
-                print(file)
-                ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
-                test(yaml.safe_load(file))
+                # Update the dashboard
+                metrics = {"train_CE": train_loss, "test_CE": test_loss, "f1score": f1score}
+                if wandb_log is not None:
+                    logging.info("Logging on wandb")
+                    wandb_log(metrics)
+
+        except BaseException as e:
+            logging.warning(f"Arrêt Hyperband intercepté (Type: {type(e).__name__}). Destruction des workers PyTorch...")
+        
+        # 1. On tue violemment les processus de chargement de données
+            if 'dataloader' in locals():
+                if hasattr(dataloader, '_iterator') and dataloader._iterator is not None:
+                    dataloader._iterator._shutdown_workers() # Méthode interne de PyTorch pour forcer le kill
+            del dataloader
+        
+            # 2. On laisse l'exception remonter pour que l'agent W&B clôture le run proprement
+            raise e
+
+            if train_config["test_end_train"]:
+                logging.info("Envoi automatique du fichier")
+                with open(logdir / "config.yaml", "r") as file:
+                    print(file)
+                    ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
+                    test(yaml.safe_load(file))
 
 
 def train(config):
