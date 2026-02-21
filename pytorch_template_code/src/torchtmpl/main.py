@@ -32,12 +32,12 @@ from . import utils
 
 NUM_CLASSES = 86
 
+
 def force_hard_exit(signal,frame):
     logging.warning("Signal reçu, on tue le processus de manière propre !")
     os._exit(0)
 
-
-def train_sweep():
+def train_sweep(tmp_testpath=None, tmp_trainpath=None):
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
     use_cuda = torch.cuda.is_available()
@@ -68,7 +68,7 @@ def train_sweep():
         batch_size = data_config["batch_size"]
 
         train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-            data_config, use_cuda, transform=transform
+            data_config, use_cuda, transform=transform,tmp_trainpath = tmp_trainpath
         )
 
         model = models.build_model(model_config, input_size, num_classes)
@@ -436,7 +436,7 @@ def train(config):
         with open(logdir / "config.yaml", "r") as file:
             print(file)
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
-            test(yaml.safe_load(file))
+            test(yaml.safe_load(file),tmp_testpath=tmp_testpath)
 
 
 def send_kaggle(filepath):
@@ -445,7 +445,7 @@ def send_kaggle(filepath):
     print("fichier envoyé !")
     
 @torch.no_grad()
-def test(config,send_kaggle_bool=True):
+def test(config,send_kaggle_bool=True,tmp_testpath=None):
     """
     This function should take the model we want to test ie probably the best model 
     0.jpg, 1 
@@ -467,7 +467,7 @@ def test(config,send_kaggle_bool=True):
         save_dir = config["test"]["save_dir"]
         unique_save_path = utils.generate_unique_csv(save_dir,model_name)
         print(f"unique save path is {unique_save_path}")
-        test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda)
+        test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda,tmp_testpath=tmp_testpath)
         
         model_config = config["model"]
 
@@ -503,7 +503,11 @@ def create_sweep(sweep_config):
 def launch_agent(config):
     sweep_id = config["first_sweep_id"]
     print(sweep_id)
-    wandb.agent(sweep_id = sweep_id, function = train_sweep)
+    if "tmp_testpath" in config:
+        tmp_testpath = config["tmp_testpath"]
+    if "tmp_trainpath" in config:
+        tmp_trainpath = config["tmp_trainpath"]
+    wandb.agent(sweep_id = sweep_id, function = train_sweep(tmp_trainpath = tmp_trainpath, tmp_testpath = tmp_testpath))
 
 if __name__ == "__main__":
     
