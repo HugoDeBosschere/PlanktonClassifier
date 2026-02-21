@@ -10,8 +10,8 @@ def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 #SBATCH --mem=64G
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:A100.80gb:1
-#SBATCH --job-name=sweep
+#SBATCH --gres=gpu:A100.80gb
+#SBATCH --job-name=hyperband
 #SBATCH --nodes=1
 #SBATCH --partition=prod80
 #SBATCH --time=24:00:00
