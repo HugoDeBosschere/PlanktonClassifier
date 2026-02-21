@@ -78,8 +78,15 @@ def train_sweep():
         logging.info("= Loss")
         loss_config = config["loss"]
         is_weighted = loss_config["is_weighted"]
-        if is_weighted:
-            loss = optim.get_weighted_loss(loss_config["lossname"], config["data"]["trainpath"],device )
+        lossname = loss_config["lossname"]
+        normalized_name = lossname.strip().lower().replace("_", "")
+        print(f"We are using the loss : {normalized_name}")
+        focal_loss_set = ("FocalLoss", "focalloss","Focalloss", "focalLoss", "focal_loss", "FocalLoss ")
+        if normalized_name in focal_loss_set:
+            logging.info("We are using a Focal Loss")
+            optim.get_focal_loss(config["data"]["trainpath"], device, loss_config["gamma"])
+        elif is_weighted:
+            loss = optim.get_weighted_loss(lossname, config["data"]["trainpath"],device)
             logging.info("We are using a weighted loss")
         else:
             loss = optim.get_loss(loss_config, config["data"]["trainpath"],device )

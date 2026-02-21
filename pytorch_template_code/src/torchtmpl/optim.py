@@ -9,12 +9,6 @@ import numpy as np
 def get_loss(loss_config, trainpath, device):
     gamma = loss_config["gamma"]
     lossname = loss_config["lossname"]
-    normalized_name = lossname.strip().lower().replace("_", "")
-    print(f"We are using the loss : {normalized_name}")
-    focal_loss_set = ("FocalLoss", "focalloss","Focalloss", "focalLoss", "focal_loss", "FocalLoss ")
-    if normalized_name in focal_loss_set:
-        print("We are using a Focal Loss")
-        return get_focal_loss(trainpath, device, gamma) 
     return eval(f"nn.{lossname}()")
 
 def get_weighted_loss(lossname, trainpath,device):
