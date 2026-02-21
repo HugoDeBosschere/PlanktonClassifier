@@ -11,7 +11,10 @@ def get_loss(loss_config, trainpath, device):
     lossname = loss_config["lossname"]
     return eval(f"nn.{lossname}()")
 
-def get_weighted_loss(lossname, trainpath,device):
+def get_weighted_loss(lossname, trainpath,device,tmp_trainpath = None):
+    if tmp_trainpath:
+        trainpath = tmp_trainpath
+
     base_dataset = base_dataset = torchvision.datasets.ImageFolder(
         root=trainpath,
     )
@@ -27,7 +30,10 @@ def get_weighted_loss(lossname, trainpath,device):
     else:
         raise ValueError(f"Loss {lossname} not found in torch.nn")
 
-def get_focal_loss(trainpath, device, gamma):
+def get_focal_loss(trainpath, device, gamma,tmp_trainpath = None):
+    if tmp_trainpath:
+        trainpath = tmp_trainpath
+    
     base_dataset = base_dataset = torchvision.datasets.ImageFolder(
         root=trainpath,
     )
