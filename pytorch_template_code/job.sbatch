@@ -1,12 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=autosend
+#SBATCH --job-name=hyper
+#SBATCH --cpus-per-task=8
 #SBATCH --nodes=1
-#SBATCH --partition=gpu_tp
-#SBATCH --time=2:00:00
+#SBATCH --partition=gpu_prod_long
+#SBATCH --time=48:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
-#SBATCH --array=1-1
+#SBATCH --exclude=sh[00,01,05,03,09,20-22,08,02,10-19]    
+#SBATCH --array=1-3
 
 
 current_dir=`pwd`
@@ -22,19 +24,19 @@ mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
 
 export TMPDIR
-PYTORCH_ALLOC_CONF=expandable_segments:True 
+export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
-#rsync -a --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpgbrg__q3-config.yml> $TMPDIR/config.yaml
+#rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmph1krvsvl-config.yml> $TMPDIR/config.yaml
 
-#echo "Verifying that the right configuration has been generated" 
-#cat $TMPDIR/config.yaml
+echo "Verifying that the right configuration has been generated" 
+cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 73435a5e033557a7cb3d7068e5ce0ce6e719d0f6"
+echo "Checking out the correct version of the code commit_id d54c3a875c3b296cb44f7d3a0ee0c630eff86511"
 cd $TMPDIR/code
-git checkout 73435a5e033557a7cb3d7068e5ce0ce6e719d0f6
+git checkout d54c3a875c3b296cb44f7d3a0ee0c630eff86511
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -44,7 +46,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/config-no-tmp.yaml train
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmph1krvsvl-config.yml launch_agent
 
 if [[ $? != 0 ]]; then
     exit -1
