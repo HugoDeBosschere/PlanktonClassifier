@@ -8,7 +8,7 @@
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --exclude=sh[00,01,05,03,10-19,20]    
-#SBATCH --array=1-1
+#SBATCH --array=1-4
 
 
 current_dir=`pwd`
@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 #echo "Copying the dataset to have faster access to the samples"
 #mkdir $TMPDIR/dataset
 #rsync -aph --info=progress2 /mounts/datasets/datasets/2025-ZooCamChallenge $TMPDIR/dataset/
-#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpilcn0lw2-config.yml> $TMPDIR/config.yaml
+#envsubst </usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp8tqzfrhu-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 824fc0c40edb3be5b9ec1587dffa50bf13d7d2df"
+echo "Checking out the correct version of the code commit_id a378e048b199859a1636acec304e39c151ff2744"
 cd $TMPDIR/code
-git checkout 824fc0c40edb3be5b9ec1587dffa50bf13d7d2df
+git checkout a378e048b199859a1636acec304e39c151ff2744
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -46,7 +46,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmpilcn0lw2-config.yml sweep
+python -m torchtmpl.main /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/configs/tmp8tqzfrhu-config.yml launch_agent
 
 if [[ $? != 0 ]]; then
     exit -1

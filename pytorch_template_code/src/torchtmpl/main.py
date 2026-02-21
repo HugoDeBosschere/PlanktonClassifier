@@ -485,6 +485,7 @@ def create_sweep(sweep_config):
 
 def launch_agent(config):
     sweep_id = config["first_sweep_id"]
+    print(sweep_id)
     wandb.agent(sweep_id = sweep_id, function = train_sweep)
 
 if __name__ == "__main__":
