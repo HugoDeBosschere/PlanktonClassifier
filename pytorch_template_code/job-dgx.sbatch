@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --mem=64G
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:nvidia_a100_1g.10gb
 #SBATCH --job-name=40hypers1
@@ -30,14 +30,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp_2yquzsb-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp7k5wicd_-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 10c43b18616fa7e8001e4427565ca9871a30092b"
+echo "Checking out the correct version of the code commit_id 75bb76491dcee1a979846175337446f845ed3fc5"
 cd $TMPDIR/code
-git checkout 10c43b18616fa7e8001e4427565ca9871a30092b
+git checkout 75bb76491dcee1a979846175337446f845ed3fc5
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
