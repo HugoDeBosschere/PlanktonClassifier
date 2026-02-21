@@ -10,6 +10,7 @@ def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 #SBATCH --mem=64G
 #SBATCH --ntasks=1
+#SBATCH --cpus-per-task=64
 #SBATCH --gres=gpu:A100.80gb
 #SBATCH --job-name=hyperband
 #SBATCH --nodes=1
