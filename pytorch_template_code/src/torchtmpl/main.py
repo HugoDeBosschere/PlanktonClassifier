@@ -38,6 +38,8 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
+    
+    num_classes = NUM_CLASSES
 
     with wandb.init() as run:
         config = run.config
