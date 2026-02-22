@@ -130,7 +130,6 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
         v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0)
     ])
 
-    gpu_transforms = torch.jit.script(gpu_transforms)
 
     len_dataset = len(loader)
 
