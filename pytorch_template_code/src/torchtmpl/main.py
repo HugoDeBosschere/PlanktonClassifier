@@ -64,9 +64,9 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
             transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
             pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
-        if pretrained_in_color:
-            to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))# Does the necessary modifications so that the image now has 3 channels (corresponding to RGB)
-            transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
+            if pretrained_in_color:
+                to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))# Does the necessary modifications so that the image now has 3 channels (corresponding to RGB)
+                transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
    
         # Build the dataloaders
         logging.info("= Building the dataloaders")
