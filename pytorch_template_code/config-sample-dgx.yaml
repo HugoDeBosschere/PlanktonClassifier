@@ -36,8 +36,8 @@ model:
   num_layers: 4 
   size_linear : 1024
   prob_droupout : 0.5
-  #pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
-  #pretrained_in_color: True
+  pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  pretrained_in_color: True
   #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
 sweep:
