@@ -32,8 +32,6 @@ from . import utils
 
 NUM_CLASSES = 86
 
-
-
 def train_sweep(tmp_testpath=None, tmp_trainpath=None):
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
