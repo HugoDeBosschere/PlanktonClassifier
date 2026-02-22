@@ -251,12 +251,12 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             # 2. On laisse l'exception remonter pour que l'agent W&B clôture le run proprement
             raise e
 
-            if train_config["test_end_train"]:
-                logging.info("Envoi automatique du fichier")
-                with open(logdir / "config.yaml", "r") as file:
-                    print(file)
-                    ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
-                    test(yaml.safe_load(file))
+        if train_config["test_end_train"]:
+            logging.info("Envoi automatique du fichier")
+            with open(logdir / "config.yaml", "r") as file:
+                print(file)
+                ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
+                test(yaml.safe_load(file))
 
 
 def train(config):
