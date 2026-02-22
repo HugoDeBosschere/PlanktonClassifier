@@ -1,5 +1,5 @@
 program: main.py
-name: hyperbandtest
+name: trashsweep
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
@@ -79,8 +79,8 @@ parameters:
   model.prob_droupout:
     min: 0.0 
     max : 0.99
-  #model.pretrained_path:
-    #value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  model.pretrained_path:
+    value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
   model.pretrained_in_color:
     value: True 
   #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored

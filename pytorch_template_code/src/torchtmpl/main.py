@@ -57,20 +57,32 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         model_config = config["model"]
         transform = None 
 
+        if "pretrained_path" in model_config:
+        logging.info("using a pretrained model") 
+        model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
+        transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
+        pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
+        if pretrained_in_color:
+            to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))# Does the necessary modifications so that the image now has 3 channels (corresponding to RGB)
+            transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
+   
         # Build the dataloaders
         logging.info("= Building the dataloaders")
         data_config = config["data"]
         batch_size = data_config["batch_size"]
 
         train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-            data_config, use_cuda, transform=transform,tmp_trainpath = tmp_trainpath
+            data_config, use_cuda, transform=transform
         )
 
-        model = models.build_model(model_config, input_size, num_classes)
-        if "old_model_path" in model_config:
-            old_model_path = model_config["old_model_path"]
-            logging.info(f"Loading model at {old_model_path}")
-            model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))        
+        if not "pretrained_path" in model_config:
+            logging.info("We are not using a pretrained model ie custom model !")
+            model = models.build_model(model_config, input_size, num_classes)
+            if "old_model_path" in model_config:
+                old_model_path = model_config["old_model_path"]
+                logging.info(f"Loading model at {old_model_path}")
+                model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
+        
         model.to(device)
 
         
