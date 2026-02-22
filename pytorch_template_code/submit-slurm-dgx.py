@@ -8,13 +8,12 @@ import tempfile
 
 def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
-#SBATCH --mem=64G
-#SBATCH --cpus-per-task=16
+
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_3g.40gb
-#SBATCH --job-name=sweep
+#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
+#SBATCH --job-name=pretrained
 #SBATCH --nodes=1
-#SBATCH --partition=prod40
+#SBATCH --partition=prod80
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
