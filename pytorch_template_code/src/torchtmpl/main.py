@@ -74,7 +74,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         batch_size = data_config["batch_size"]
 
         train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-            data_config, use_cuda, transform=transform
+            data_config, use_cuda, transform=transform,tmp_trainpath=tmp_trainpath
         )
 
         if not "pretrained_path" in model_config:
