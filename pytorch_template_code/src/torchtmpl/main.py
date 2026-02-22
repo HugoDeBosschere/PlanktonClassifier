@@ -62,6 +62,9 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         if "pretrained_path" in model_config:
             logging.info("using a pretrained model") 
             model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
+            for param in model.parameters():
+                param.requires_grad = False
+            model.reset_classifier(num_classes = NUM_CLASSES)
             transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
             pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
             if pretrained_in_color:
