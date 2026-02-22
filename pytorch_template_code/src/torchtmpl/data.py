@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.utils.data
 import torchvision
 from torchvision import transforms
+from torchvision.transforms import v2
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -69,8 +70,11 @@ def get_dataloaders(data_config, use_cuda,transform=None,tmp_trainpath=None):
     if transform:
         input_transform = transform
     else: 
-        input_transform = transforms.Compose(
-            [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+        input_transform = v2.Compose(
+            [v2.Grayscale(), 
+            v2.Resize((128, 128),antialias = True),
+            v2.ToImage(), 
+            v2.ToDtype(torch.float32,scale = True),]
         )
 
     if tmp_trainpath:

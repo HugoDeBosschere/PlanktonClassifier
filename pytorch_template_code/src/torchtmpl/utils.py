@@ -9,6 +9,7 @@ import torch
 import torch.nn
 import tqdm
 import torch.nn.functional as F 
+from torchvision.transforms import v2
 #import time 
 
 def unflatten_config(flat_config):
@@ -122,6 +123,15 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
     total_loss = 0
     num_samples = 0
 
+    gpu_transforms = v2.Compose([
+        v2.RandomHorizontalFlip(p=0.5),
+        v2.ElasticTransform(alpha=50.0, sigma=5.0),                        # Augmentation géométrique
+        v2.ColorJitter(brightness=0.2, contrast=0.2),          # Augmentation photométrique
+        v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0)
+    ])
+
+    gpu_transforms = torch.jit.script(gpu_transforms)
+
     len_dataset = len(loader)
 
     if dynamic_display:
@@ -133,6 +143,9 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
     for i, (inputs, targets) in pbar:
         
         inputs, targets = inputs.to(device,non_blocking = True), targets.to(device,non_blocking = True)
+
+
+        inputs = gpu_transforms(inputs) #We apply the transformations on the gpu 
 
         # Compute the forward propagation
         outputs = model(inputs)
