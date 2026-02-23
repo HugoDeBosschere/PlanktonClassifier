@@ -23,7 +23,7 @@ parameters:
   data.batch_size:
     value: 128
   data.num_workers:
-    value: 8
+    value: 
   data.valid_ratio:
     value: 0.2
   data.is_batch_weighted :

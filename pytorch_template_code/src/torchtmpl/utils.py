@@ -100,7 +100,7 @@ class ModelCheckpoint(object):
             return True
         return False
 
-def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512):
+def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512,ona100=False):
     """
     Train a model for one epoch, iterating over the loader
     using the f_loss to compute the loss and the optimizer
@@ -145,11 +145,16 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
 
 
         inputs = gpu_transforms(inputs) #We apply the transformations on the gpu 
+        
+        if ona100:
+            with torch.autocast(device_type = 'cuda',dtype = torch.bfloat16):
+                outputs = model(inputs)
+                loss = f_loss(outputs, targets)
 
         # Compute the forward propagation
-        outputs = model(inputs)
-
-        loss = f_loss(outputs, targets)
+        else:
+            outputs = model(inputs)
+            loss = f_loss(outputs, targets)
 
         # Backward and optimize
         optimizer.zero_grad()
