@@ -54,7 +54,8 @@ parameters:
     value: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
 
 
-  model.ona100: True
+  model.ona100: 
+    value : True
   model.pretrained_path:
     value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
   model.pretrained_in_color:
