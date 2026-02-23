@@ -1,5 +1,5 @@
 program: main.py
-name: pretrainedsweep
+name: newpretrainedsweep
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 method: random 
@@ -27,6 +27,8 @@ parameters:
     value : AdamW
   optim.params.lr:
     value : 0.001
+  optim.params.weight_decay:
+    value: 0.0
   optim.params.amsgrad:
     value: True
 
@@ -53,7 +55,14 @@ parameters:
   logging.save_dir :
     value: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
 
-
+  model.class:
+    values: VanillaCNN
+  model.num_layers:
+    values: 3
+  model.size_linear :
+    values: 256
+  model.prob_droupout:
+    value: 0.0
   model.ona100: 
     value : True
   model.pretrained_path:
