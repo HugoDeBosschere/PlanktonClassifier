@@ -521,7 +521,7 @@ def create_sweep(sweep_config):
     entity = config["entity"]
     count = config["count"]
     sweep_id = wandb.sweep(sweep = sweep_config,project = project, entity = entity)
-    wandb.agent(sweep_id = sweep_id, function = train_sweep, count= count)
+    launch_agent(sweep_config)
 
 def launch_agent(config):
     sweep_id = config["first_sweep_id"]

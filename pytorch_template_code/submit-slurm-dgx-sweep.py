@@ -55,7 +55,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml launch_agent
+python -m torchtmpl.main $TMPDIR/config.yaml create_sweep
 
 if [[ $? != 0 ]]; then
     exit -1
