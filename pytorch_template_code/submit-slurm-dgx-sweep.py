@@ -22,7 +22,7 @@ def makejob(commit_id, configpath, nruns):
 
 current_dir=`pwd`
 export PATH=$PATH:~/.local/bin
-
+export HF_TOKEN=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
 echo "Session " ${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}
 
 echo "Running on " $(hostname)
