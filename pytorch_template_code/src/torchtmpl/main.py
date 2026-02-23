@@ -521,10 +521,11 @@ def create_sweep(sweep_config):
     entity = config["entity"]
     count = config["count"]
     sweep_id = wandb.sweep(sweep = sweep_config,project = project, entity = entity)
-    launch_agent(sweep_config)
+    launch_agent(sweep_config,sweep_id)
 
-def launch_agent(config):
-    sweep_id = config["first_sweep_id"]
+def launch_agent(config,sweep_id=None):
+    if not sweep_id:
+        sweep_id = config["first_sweep_id"]
     print(sweep_id)
     if "tmp_testpath" in config:
         print(f"tmp_testpath existe : {config["tmp_testpath"]}")
