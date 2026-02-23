@@ -9,7 +9,6 @@ metric:
 
 
 parameters:
-  
   data.trainpath:
     value: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
   data.testpath:
@@ -27,9 +26,7 @@ parameters:
   optim.algo:
     value : AdamW
   optim.params.lr:
-      value : 0.001
-  optim.params.weight_decay:
-      value : 0.001
+    value : 0.001
   optim.params.amsgrad:
     value: True
 
