@@ -17,7 +17,7 @@ loss:
   gamma: 2
 
 train:
-  nepochs: 100
+  nepochs: 1
   loss: "CrossEntropyLoss"
   is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   test_end_train: True
@@ -26,16 +26,18 @@ logging:
   wandb: 
     project: WinningKaggle
     entity: hugo-debosschere-are-na
-  logdir: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
-  save_dir : /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
+  logdir: "/usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+  save_dir : /usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
 # model:
 #   class: Linear
 model:
   class: VanillaCNN
   num_layers: 1 
-  size_linear : 1024
+  size_linear : 256
   prob_droupout : 0.5
-  pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
-  pretrained_in_color: True
+  #pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  #pretrained_in_color: True
   #old_model_path : None #if not None, the parameters are going to be ignored
                                                       #and the model in old_model_path will be loaded and improved
+
+#tmp_testpath: "./test"

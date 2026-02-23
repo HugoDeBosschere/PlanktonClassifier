@@ -58,10 +58,10 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         transform = None 
 
         if "pretrained_path" in model_config:
-        logging.info("using a pretrained model") 
-        model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
-        transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
-        pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
+            logging.info("using a pretrained model") 
+            model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
+            transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
+            pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
         if pretrained_in_color:
             to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))# Does the necessary modifications so that the image now has 3 channels (corresponding to RGB)
             transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
@@ -522,10 +522,10 @@ def launch_agent(config):
     sweep_id = config["first_sweep_id"]
     print(sweep_id)
     if "tmp_testpath" in config:
-        print(f"tmp_testpath existe : {config["tmp_testpath"]}")
+        print(f"tmp_testpath existe : {config['tmp_testpath']}")
         tmp_testpath = config["tmp_testpath"]
     if "tmp_trainpath" in config:
-        print(f"tmp_trainpath existe : {config["tmp_trainpath"]}")
+        print(f"tmp_trainpath existe : {config['tmp_trainpath']}")
         tmp_trainpath = config["tmp_trainpath"]
     bound_train_function = partial(train_sweep, tmp_trainpath=tmp_trainpath, tmp_testpath=tmp_testpath)
     wandb.agent(sweep_id=sweep_id, function=bound_train_function)
