@@ -17,7 +17,7 @@ loss:
   gamma: 2
 
 train:
-  nepochs: 1
+  nepochs: 40
   loss: "CrossEntropyLoss"
   is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   test_end_train: True
@@ -33,7 +33,7 @@ logging:
 model:
   class: VanillaCNN
   num_layers: 1 
-  size_linear : 256
+  size_linear : 1024
   prob_droupout : 0.5
   #pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
   #pretrained_in_color: True
