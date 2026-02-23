@@ -56,11 +56,11 @@ parameters:
     value: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
 
   model.class:
-    values: VanillaCNN
+    value: "VanillaCNN"
   model.num_layers:
-    values: 3
+    value: 3
   model.size_linear :
-    values: 256
+    value: 256
   model.prob_droupout:
     value: 0.0
   model.ona100: 
