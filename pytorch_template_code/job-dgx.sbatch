@@ -2,7 +2,7 @@
 
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:nvidia_a100_1g.10gb:1
-#SBATCH --job-name=tinynet
+#SBATCH --job-name=tinyvit
 #SBATCH --nodes=1
 #SBATCH --partition=prod10
 #SBATCH --time=24:00:00
@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpyskg5dnh-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpmixp9bst-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 75d7e3dba5ddcf5bb1bb0ec9cd3a25a03dc6e43f"
+echo "Checking out the correct version of the code commit_id bcbc9a3732fd9d4c260173baee4cc17eb0e6caa5"
 cd $TMPDIR/code
-git checkout 75d7e3dba5ddcf5bb1bb0ec9cd3a25a03dc6e43f
+git checkout bcbc9a3732fd9d4c260173baee4cc17eb0e6caa5
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
