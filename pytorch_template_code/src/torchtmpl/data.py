@@ -60,22 +60,21 @@ def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset, indi
     return b_sampler
 
 
-def get_dataloaders(data_config, use_cuda,transform=None,tmp_trainpath=None):
+def get_dataloaders(data_config, use_cuda,train_transform=None,valid_transform = None,tmp_trainpath=None):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
     num_workers = data_config["num_workers"]
     is_batch_weighted = data_config["is_batch_weighted"]
     logging.info("  - Dataset creation")
 
-    if transform:
-        input_transform = transform
-    else: 
-        input_transform = v2.Compose(
+    if not train_transform:
+        train_transform = v2.Compose(
             [v2.Grayscale(), 
             v2.Resize((128, 128),antialias = True),
             v2.ToImage(), 
             v2.ToDtype(torch.float32,scale = True),]
         )
+        valid_transform = train_transform
 
     if tmp_trainpath:
         trainpath = tmp_trainpath
@@ -83,8 +82,7 @@ def get_dataloaders(data_config, use_cuda,transform=None,tmp_trainpath=None):
         trainpath = data_config["trainpath"]
 
     base_dataset = torchvision.datasets.ImageFolder(
-        root=trainpath,
-        transform=input_transform
+        root=trainpath
     )
 
     logging.info(f"  - I loaded {len(base_dataset)} samples")
@@ -97,6 +95,9 @@ def get_dataloaders(data_config, use_cuda,transform=None,tmp_trainpath=None):
 
     train_dataset = torch.utils.data.Subset(base_dataset, train_indices)
     valid_dataset = torch.utils.data.Subset(base_dataset, valid_indices)
+
+    train_dataset.transform = train_transform
+    valid_dataset.transform = valid_transform
 
     num_classes = len(base_dataset.classes)
     len_dataset_train = len(train_dataset)
@@ -146,7 +147,7 @@ def get_dataloaders(data_config, use_cuda,transform=None,tmp_trainpath=None):
             shuffle = False,
             num_workers=num_workers,
             pin_memory=use_cuda,
-            batch_size=2*batch_size,
+            batch_size=batch_size,
             persistent_workers=True,# <--- NEW: Keeps workers alive between epochs
             prefetch_factor=4
         )

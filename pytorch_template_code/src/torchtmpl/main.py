@@ -65,19 +65,20 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             for param in model.parameters():
                 param.requires_grad = False
             model.reset_classifier(num_classes = NUM_CLASSES)
-            transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model))
+            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True)
+            valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
             pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
             if pretrained_in_color:
                 to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))# Does the necessary modifications so that the image now has 3 channels (corresponding to RGB)
-                transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
-   
+                train_transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
+                valid_transform.transforms.insert(0, to_rgb)
         # Build the dataloaders
         logging.info("= Building the dataloaders")
         data_config = config["data"]
         batch_size = data_config["batch_size"]
 
         train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-            data_config, use_cuda, transform=transform,tmp_trainpath=tmp_trainpath
+            data_config, use_cuda, train_transform=train_transform,valid_transform=valid_transform,tmp_trainpath=tmp_trainpath
         )
 
         if not "pretrained_path" in model_config:
