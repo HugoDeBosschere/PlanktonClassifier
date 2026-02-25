@@ -153,7 +153,7 @@ def get_dataloaders(data_config, use_cuda,train_transform=None,valid_transform =
         )
 
     
-    input_size = tuple(base_dataset[0][0].shape)
+    input_size = tuple(train_dataset[0][0].shape)
 
     return train_loader, valid_loader, input_size, num_classes
 
