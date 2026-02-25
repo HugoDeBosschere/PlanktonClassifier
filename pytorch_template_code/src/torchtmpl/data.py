@@ -60,6 +60,21 @@ def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset, indi
     return b_sampler
 
 
+class DatasetTransformer(torch.utils.data.Dataset):
+    def __init__(self, subset, transform):
+        self.subset = subset
+        self.transform = transform
+
+    def __getitem__(self, index):
+        x, y = self.subset[index]
+        if self.transform:
+            x = self.transform(x)
+        return x, y
+
+    def __len__(self):
+        return len(self.subset)
+
+
 def get_dataloaders(data_config, use_cuda,train_transform=None,valid_transform = None,tmp_trainpath=None):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
@@ -93,11 +108,11 @@ def get_dataloaders(data_config, use_cuda,train_transform=None,valid_transform =
     train_indices = indices[num_valid:]
     valid_indices = indices[:num_valid]
 
-    train_dataset = torch.utils.data.Subset(base_dataset, train_indices)
-    valid_dataset = torch.utils.data.Subset(base_dataset, valid_indices)
+    train_subset = torch.utils.data.Subset(base_dataset, train_indices)
+    valid_subset = torch.utils.data.Subset(base_dataset, valid_indices)
 
-    train_dataset.transform = train_transform
-    valid_dataset.transform = valid_transform
+    train_dataset = DatasetTransformer(train_subset,train_transform)
+    valid_dataset = DatasetTransformer(valid_subset,valid_transform)
 
     num_classes = len(base_dataset.classes)
     len_dataset_train = len(train_dataset)
