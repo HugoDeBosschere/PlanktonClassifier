@@ -262,17 +262,17 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             if 'dataloader' in locals():
                 if hasattr(dataloader, '_iterator') and dataloader._iterator is not None:
                     dataloader._iterator._shutdown_workers() # Méthode interne de PyTorch pour forcer le kill
-            del dataloader
+                del dataloader
         
             # 2. On laisse l'exception remonter pour que l'agent W&B clôture le run proprement
             raise e
 
-            if train_config["test_end_train"]:
-                logging.info("Envoi automatique du fichier")
-                with open(logdir / "config.yaml", "r") as file:
-                    print(file)
-                    ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
-                    test(yaml.safe_load(file))
+        if train_config["test_end_train"]:
+            logging.info("Envoi automatique du fichier")
+            with open(logdir / "config.yaml", "r") as file:
+                print(file)
+                ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
+                test(yaml.safe_load(file))
 
 
 def train(config):
