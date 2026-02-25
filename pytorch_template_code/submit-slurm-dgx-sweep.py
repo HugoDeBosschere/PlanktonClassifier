@@ -13,7 +13,7 @@ def makejob(commit_id, configpath, nruns):
 #SBATCH --gres=gpu:nvidia_a100-sxm4-80gb
 #SBATCH --job-name=vitbase
 #SBATCH --nodes=1
-#SBATCH --partition=prod40
+#SBATCH --partition=prod80
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_3g.40gb:1
-#SBATCH --job-name=convnextv2
+#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb
+#SBATCH --job-name=vitbase
 #SBATCH --nodes=1
 #SBATCH --partition=prod40
 #SBATCH --time=24:00:00
@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmplweuvdhp-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpegegxana-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 58282408872282a1d8799ba11240eeef1821d3c2"
+echo "Checking out the correct version of the code commit_id 44198d724aa953484ea6cc176a98e54a6c365ea1"
 cd $TMPDIR/code
-git checkout 58282408872282a1d8799ba11240eeef1821d3c2
+git checkout 44198d724aa953484ea6cc176a98e54a6c365ea1
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
