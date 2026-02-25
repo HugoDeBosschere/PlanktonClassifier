@@ -11,7 +11,7 @@ def makejob(commit_id, configpath, nruns):
 
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:nvidia_a100_1g.10gb:1
-#SBATCH --job-name=levitsmall
+#SBATCH --job-name=tinyvit
 #SBATCH --nodes=1
 #SBATCH --partition=prod10
 #SBATCH --time=24:00:00
