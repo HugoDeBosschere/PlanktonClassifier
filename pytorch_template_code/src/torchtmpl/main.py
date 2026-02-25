@@ -149,8 +149,8 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             + "## Loss\n\n"
             + f"{loss}\n\n"
             + "## Datasets : \n"
-            + f"Train : {train_loader.dataset.dataset}\n"
-            + f"Validation : {valid_loader.dataset.dataset}"
+            + f"Train : {train_loader.dataset.subset.dataset}\n"
+            + f"Validation : {valid_loader.dataset.subset.dataset}"
         )
         with open(logdir / "summary.txt", "w") as f:
             f.write(summary_text)
