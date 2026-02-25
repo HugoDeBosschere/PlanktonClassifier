@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpq_ma0xhl-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp6_59b6ch-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 13b9edab021831a0ab18b5e690a3afef8b9d1336"
+echo "Checking out the correct version of the code commit_id deb6f4940169fba1ae641d28ee06a16b984b86b3"
 cd $TMPDIR/code
-git checkout 13b9edab021831a0ab18b5e690a3afef8b9d1336
+git checkout deb6f4940169fba1ae641d28ee06a16b984b86b3
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
