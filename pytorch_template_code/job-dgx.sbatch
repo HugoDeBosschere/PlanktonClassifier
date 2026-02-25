@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_1g.10gb:1
+#SBATCH --gres=gpu:nvidia_a100_4g.40gb:1
 #SBATCH --job-name=pretrained
 #SBATCH --nodes=1
-#SBATCH --partition=prod10
+#SBATCH --partition=prod40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
@@ -29,14 +29,14 @@ export PYTORCH_ALLOC_CONF=expandable_segments:True
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpb_1f89is-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpyoux8ibm-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 491be5fbfc2cbfa27a6c06575710c078d56c84ca"
+echo "Checking out the correct version of the code commit_id 701d6694dcbf69f31331b7b1e607cdae37b0e497"
 cd $TMPDIR/code
-git checkout 491be5fbfc2cbfa27a6c06575710c078d56c84ca
+git checkout 701d6694dcbf69f31331b7b1e607cdae37b0e497
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
