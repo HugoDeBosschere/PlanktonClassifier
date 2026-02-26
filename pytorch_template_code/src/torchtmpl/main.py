@@ -64,7 +64,16 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
             for param in model.parameters():
                 param.requires_grad = False
-            model.reset_classifier(num_classes = NUM_CLASSES)
+            if "old_model_path" in model_config:
+                old_model_path = model_config["old_model_path"]
+                logging.info(f"Loading model at {old_model_path}")
+                model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
+                classifier_module = model.get_classifier() 
+                for param in classifier_module.parameters(): #unfreezing the parameters of the classifier
+                    param.requires_grad = True
+            else:
+                model.reset_classifier(num_classes = NUM_CLASSES)
+            
             train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True)
             valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
             pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
@@ -114,7 +123,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         # Build the optimizer
         logging.info("= Optimizer")
         optim_config = config["optim"]
-        optimizer = optim.get_optimizer(optim_config, model.parameters())
+        optimizer = optim.get_optimizer(optim_config, filter(lambda p: p.requires_grad, model.parameters()))
         logging.info(f"We are running the latest code ! Yay !")
         # Build the callbacks
         logging_config = config["logging"]
