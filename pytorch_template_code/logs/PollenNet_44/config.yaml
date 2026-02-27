@@ -29,5 +29,5 @@ train:
   nepochs: 128
   test_end_train: true
 test:
-    model_path: [/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/logs/PollenNet_44/best_model.pt,/usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/logs/PollenNet_44/best_model_loss.pt]
-    save_dir: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
+    model_path: [/raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_44/best_model.pt]
+    save_dir: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
