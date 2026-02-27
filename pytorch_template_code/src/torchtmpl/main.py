@@ -538,10 +538,10 @@ def launch_agent(config,sweep_id=None):
         sweep_id = config["first_sweep_id"]
     print(sweep_id)
     if "tmp_testpath" in config:
-        print(f"tmp_testpath existe : {config["tmp_testpath"]}")
+        print(f"tmp_testpath existe : {config['tmp_testpath']}")
         tmp_testpath = config["tmp_testpath"]
     if "tmp_trainpath" in config:
-        print(f"tmp_trainpath existe : {config["tmp_trainpath"]}")
+        print(f"tmp_trainpath existe : {config['tmp_trainpath']}")
         tmp_trainpath = config["tmp_trainpath"]
     bound_train_function = partial(train_sweep, tmp_trainpath=tmp_trainpath, tmp_testpath=tmp_testpath)
     wandb.agent(sweep_id=sweep_id, function=bound_train_function)
