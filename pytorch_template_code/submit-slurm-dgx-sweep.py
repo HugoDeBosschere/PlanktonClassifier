@@ -10,10 +10,10 @@ def makejob(commit_id, configpath, nruns):
     return f"""#!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_1g.10gb
-#SBATCH --job-name=jookare
+#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb
+#SBATCH --job-name=patchvit
 #SBATCH --nodes=1
-#SBATCH --partition=prod10
+#SBATCH --partition=prod80
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
@@ -55,7 +55,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml test
+python -m torchtmpl.main $TMPDIR/config.yaml launch_agent
 
 if [[ $? != 0 ]]; then
     exit -1
