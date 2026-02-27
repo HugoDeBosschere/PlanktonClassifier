@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 
 
-def makejob(commit_id, configpath, nruns):
+def makejob(commit_id, configpath, nruns, func):
     return f"""#!/bin/bash
 
 #SBATCH --job-name=hyper
@@ -55,7 +55,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main {configpath} launch_agent
+python -m torchtmpl.main {configpath} {func}
 
 if [[ $? != 0 ]]; then
     exit -1
@@ -104,10 +104,15 @@ if len(sys.argv) == 2:
 else:
     nruns = int(sys.argv[2])
 
+if len(sys.argv) == 4:
+    func = sys.argv[3]
+else:
+    func = create_sweep #calls create sweep when it's not specified
+
 # Copy the config in a temporary config file
 os.system("mkdir -p configs")
 tmp_configfilepath = tempfile.mkstemp(dir="./configs", suffix="-config.yml")[1]
 os.system(f"cp {configpath} {tmp_configfilepath}")
 
 # Launch the batch jobs
-submit_job(makejob(commit_id, tmp_configfilepath, nruns))
+submit_job(makejob(commit_id, tmp_configfilepath, nruns, func))

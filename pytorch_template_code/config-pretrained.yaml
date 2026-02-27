@@ -44,7 +44,7 @@ parameters:
 
   
   train.nepochs: 
-    value: 1
+    value: 0
   train.is_weighted:
     value: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
@@ -52,9 +52,9 @@ parameters:
 
   
   logging.logdir:
-    value: "~/DeepLearning/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs  # Better to provide the fullpath, especially on the cluster
   logging.save_dir :
-    value: /usr/users/sdim/sdim_9/DeepLearning/pytorch_template_code/test
+    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
 
   model.class:
     value: PollenNet

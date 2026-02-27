@@ -1,3 +1,5 @@
+#This config is used to test several values 
+
 program: main.py
 name: hyperbandtest
 project: WinningKaggle
