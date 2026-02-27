@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 
 
-def makejob(commit_id, configpath, nruns):
+def makejob(commit_id, configpath, nruns, func):
     return f"""#!/bin/bash
 
 #SBATCH --ntasks=1
@@ -55,7 +55,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml create_sweep
+python -m torchtmpl.main $TMPDIR/config.yaml {func}
 
 if [[ $? != 0 ]]; then
     exit -1
@@ -94,7 +94,7 @@ print(f"I will be using the commit id {commit_id}")
 # Ensure the log directory exists
 os.system("mkdir -p logslurms")
 
-if len(sys.argv) not in [2, 3]:
+if len(sys.argv) not in [2, 3,4]:
     print(f"Usage : {sys.argv[0]} config.yaml <nruns|1>")
     sys.exit(-1)
 
@@ -104,10 +104,15 @@ if len(sys.argv) == 2:
 else:
     nruns = int(sys.argv[2])
 
+if len(sys.argv) == 4:
+    func = sys.argv[4]
+else:
+    func = create_sweep
+
 # Copy the config in a temporary config file
 os.system("mkdir -p configs")
 tmp_configfilepath = tempfile.mkstemp(dir="./configs", suffix="-config.yml")[1]
 os.system(f"cp {configpath} {tmp_configfilepath}")
 
 # Launch the batch jobs
-submit_job(makejob(commit_id, tmp_configfilepath, nruns))
+submit_job(makejob(commit_id, tmp_configfilepath, nruns,func))
