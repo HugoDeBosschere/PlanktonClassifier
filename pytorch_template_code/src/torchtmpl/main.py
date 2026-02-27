@@ -33,6 +33,9 @@ from . import utils
 NUM_CLASSES = 86 
 
 def train_sweep(tmp_testpath=None, tmp_trainpath=None):
+    """
+    This has to be called with 
+    """
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
     use_cuda = torch.cuda.is_available()
@@ -265,22 +268,22 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
                     wandb_log(metrics)
 
         except BaseException as e:
+            #This was meant to use the hyperband algorithm of wandb but I couldn't really get it to work
             logging.warning(f"Arrêt Hyperband intercepté (Type: {type(e).__name__}). Destruction des workers PyTorch...")
         
-        # 1. On tue violemment les processus de chargement de données
+        #Killing the dataloader
             if 'dataloader' in locals():
                 if hasattr(dataloader, '_iterator') and dataloader._iterator is not None:
-                    dataloader._iterator._shutdown_workers() # Méthode interne de PyTorch pour forcer le kill
+                    dataloader._iterator._shutdown_workers() # Forcing the kill 
                 del dataloader
         
-            # 2. On laisse l'exception remonter pour que l'agent W&B clôture le run proprement
+            
             raise e
 
         if train_config["test_end_train"]:
             logging.info("Envoi automatique du fichier")
             with open(logdir / "config.yaml", "r") as file:
                 print(file)
-                ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
                 test(yaml.safe_load(file))
 
 
@@ -527,6 +530,7 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
     return None
 
 def create_sweep(sweep_config):
+    print("Creating a sweep")
     project = config["project"]
     entity = config["entity"]
     count = config["count"]
