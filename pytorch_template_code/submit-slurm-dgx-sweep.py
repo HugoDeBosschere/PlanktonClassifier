@@ -105,7 +105,7 @@ else:
     nruns = int(sys.argv[2])
 
 if len(sys.argv) == 4:
-    func = sys.argv[4]
+    func = sys.argv[3]
 else:
     func = create_sweep
 
