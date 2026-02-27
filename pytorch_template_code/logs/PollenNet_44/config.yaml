@@ -2,8 +2,8 @@ data:
   batch_size: 128
   is_batch_weighted: false
   num_workers: 8
-  testpath: /mounts/datasets/datasets/2025-ZooCamChallenge/test
-  trainpath: /mounts/datasets/datasets/2025-ZooCamChallenge/train
+  testpath: '$TMPDIR/dataset/test'
+  trainpath: '$TMPDIR/dataset/train'
   valid_ratio: 0.2
 logging:
   logdir: ~/DeepLearning/pytorch_template_code/logs
