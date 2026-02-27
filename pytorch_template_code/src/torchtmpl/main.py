@@ -60,7 +60,8 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         # Build the model
         logging.info("= Model")
         model_config = config["model"]
-        transform = None 
+        train_transform = None
+        valid_transform = None 
 
         if "pretrained_path" in model_config:
             logging.info("using a pretrained model") 
