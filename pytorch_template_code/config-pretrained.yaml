@@ -15,7 +15,7 @@ parameters:
   data.testpath:
     value: '$TMPDIR/dataset/test'
   data.batch_size:
-    value: 512
+    value: 256
   data.num_workers:
     value: 8
   data.valid_ratio:
@@ -35,7 +35,7 @@ parameters:
 
     
   loss.lossname:
-    value: "FocalLoss"
+    value: "CrossEntropyLoss"
   loss.is_weighted:
     value: False
   loss.gamma:
@@ -67,11 +67,11 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value:  'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k'
+    value:  'vit_small_plus_patch16_dinov3.lvd1689m'
     model.pretrained_in_color:
       value: True 
     model.old_model_path:
-      value: /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_24/best_model.pt
+      value: /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_25/best_model.pt
 
 
 
