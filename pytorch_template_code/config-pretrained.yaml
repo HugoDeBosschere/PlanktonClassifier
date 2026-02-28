@@ -44,7 +44,7 @@ parameters:
 
   
   train.nepochs: 
-    value: 0
+    value: 128
   train.is_weighted:
     value: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
