@@ -337,7 +337,7 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
             send_kaggle(unique_save_path)
     return None
 
-def run_sweep_agent(config, sweep_config=None):
+def create_sweep(config, sweep_config=None):
     """
     Initializes a W&B sweep if no ID is provided in the config, 
     then binds local datasets and launches the agent.
