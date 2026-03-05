@@ -15,7 +15,7 @@ parameters:
   data.testpath:
     value: '$TMPDIR/dataset/test'
   data.batch_size:
-    value: 512
+    value: 256
   data.num_workers:
     value: 8
   data.valid_ratio:
@@ -44,7 +44,7 @@ parameters:
 
   
   train.nepochs: 
-    value: 128
+    value: 0
   train.is_weighted:
     value: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
@@ -66,14 +66,12 @@ parameters:
     value: 0.0
   model.ona100: 
     value : True
-  model.pretrained_path:
-    value:  'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k'
-  model.pretrained_in_color:
-    value: True
-  model.freeze_pretrained:
-    value: False 
-  model.old_model_path:
-    value: /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_24/best_model.pt
+#  model.pretrained_path:
+#    value:  'vit_small_plus_patch16_dinov3.lvd1689m'
+#    model.pretrained_in_color:
+#      value: True 
+#    model.old_model_path:
+#      value: /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_21/best_model.pt
 
 
 

@@ -69,9 +69,7 @@ parameters:
   model.pretrained_path:
     value:  'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k'
   model.pretrained_in_color:
-    value: True
-  model.freeze_pretrained:
-    value: False 
+    value: True 
   model.old_model_path:
     value: /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_24/best_model.pt
 

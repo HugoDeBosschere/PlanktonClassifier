@@ -99,7 +99,7 @@ if len(sys.argv) not in [2, 3,4]:
     sys.exit(-1)
 
 configpath = sys.argv[1]
-if len(sys.argv) == 2:
+if len(sys.argv) <= 2:
     nruns = 1
 else:
     nruns = int(sys.argv[2])

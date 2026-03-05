@@ -63,3 +63,9 @@ python -m torchtmpl.models
 
 and this will call the test functions in the `torchtmpl/models/__main__.py` script.
 
+## 
+Launching a job. To launch a job on the dgx use the submit-slurm-dgx-sweep.py function 
+
+you must call uv run python -u submit-slurm-dgx-sweep.py config/file/.yaml nruns function/to/be/called 
+
+The -u flag is good practice to get accurate logs (the stderr and stdout buffers are dumped and logs are seen in real time which helps to locate the erros)
