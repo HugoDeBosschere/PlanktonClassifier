@@ -79,7 +79,7 @@ parameters:
     min: 0.0 
     max : 0.99
   model.pretrained_path:
-    value: "convnextv2_tiny.fcmae_ft_in22k_in1k"
+    value: 'mobilenetv2_100'
   model.pretrained_in_color:
     value: True 
   model.freeze_pretrained:
@@ -99,3 +99,4 @@ parameters:
 #'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k' -> pretty good
 #'tinynet_e.in1k' 
 #"hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+#mobilenetv2
