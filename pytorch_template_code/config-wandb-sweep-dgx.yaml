@@ -53,7 +53,7 @@ parameters:
 
   
   train.nepochs: 
-    value: 128
+    value: 35
   train.is_weighted:
     values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
@@ -78,13 +78,13 @@ parameters:
   model.prob_droupout:
     min: 0.0 
     max : 0.99
-  #model.pretrained_path:
-  #  value: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
-  #model.pretrained_in_color:
-  #  value: True 
-  #model.freeze_pretrained:
-  #  value: False
-  #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
+  model.pretrained_path:
+    value: 'vit_small_plus_patch16_dinov3.lvd1689m'
+  model.pretrained_in_color:
+    value: True 
+  model.freeze_pretrained:
+    value: False
+  old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
 
 
 #'vit_small_plus_patch16_dinov3.lvd1689m' -> pretty good ->  /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_21
