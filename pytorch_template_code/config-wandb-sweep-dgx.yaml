@@ -79,7 +79,7 @@ parameters:
     min: 0.0 
     max : 0.99
   model.pretrained_path:
-    value: 'vit_small_plus_patch16_dinov3.lvd1689m'
+    value: 'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k'
   model.pretrained_in_color:
     value: True 
   model.freeze_pretrained:
