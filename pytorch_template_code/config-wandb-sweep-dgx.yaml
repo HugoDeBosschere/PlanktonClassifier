@@ -23,7 +23,7 @@ parameters:
     value: 8
   data.valid_ratio:
     value: 0.2
-  data.is_batch_weighted
+  data.is_batch_weighted:
     value: False #If True, The dataloader are initialized with a RandomWeightedSampler
 
   
@@ -64,7 +64,7 @@ parameters:
   
   logging.logdir:
     value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs # Better to provide the fullpath, especially on the cluster
-  logging.save_dir :
+  logging.save_dir:
     value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
 
 
