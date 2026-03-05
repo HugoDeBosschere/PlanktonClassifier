@@ -340,31 +340,34 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
             send_kaggle(unique_save_path)
     return None
 
-def create_sweep(config, sweep_config=None):
+def create_sweep(config):
     """
-    Initializes a W&B sweep if no ID is provided in the config, 
+    Initializes a W&B sweep or connects to an existing one using a single config dictionary, 
     then binds local datasets and launches the agent.
     """
     # 1. Determine Sweep ID or Create Sweep
     sweep_id = config.get("sweep_id")
     
+    project = config.get("project")
+    entity = config.get("entity")
+    count = config.get("count")
+    
     if not sweep_id:
         print("No sweep_id found in config. Provisioning a new sweep...")
-        if not sweep_config:
-            raise ValueError("A 'sweep_config' dictionary is required to initialize a new sweep.")
-            
-        project = config.get("project")
-        entity = config.get("entity")
-        
-        # wandb.sweep pushes the search space to W&B and returns the unique ID
-        sweep_id = wandb.sweep(sweep=sweep_config, project=project, entity=entity)
+        # Passes the unified config directly to W&B
+        sweep_id = wandb.sweep(sweep=config, project=project, entity=entity)
         print(f"Created new sweep with ID: {sweep_id}")
     else:
         print(f"Connecting to existing sweep_id: {sweep_id}")
 
     # 2. Extract Data Paths
-    tmp_trainpath = config.get("tmp_trainpath")
     tmp_testpath = config.get("tmp_testpath")
+    tmp_trainpath = config.get("tmp_trainpath")
+
+    if tmp_testpath:
+        print(f"tmp_testpath existe : {tmp_testpath}")
+    if tmp_trainpath:
+        print(f"tmp_trainpath existe : {tmp_trainpath}")
 
     # 3. Bind Paths to Training Function
     bound_train_function = partial(
@@ -374,16 +377,13 @@ def create_sweep(config, sweep_config=None):
     )
     
     # 4. Launch Agent
-    count = config.get("count") # Limits the number of runs this specific agent executes
-    
     wandb.agent(
         sweep_id=sweep_id, 
-        project=config.get("project"),
-        entity=config.get("entity"),
+        project=project,
+        entity=entity,
         function=bound_train_function, 
         count=count
     )
-
 if __name__ == "__main__":
     
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
