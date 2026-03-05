@@ -59,7 +59,7 @@ parameters:
   train.test_end_train:
     value: True
   train.nepochs: 
-    value: 0
+    value: 1
 
   
   logging.logdir:
