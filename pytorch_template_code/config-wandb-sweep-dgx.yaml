@@ -18,9 +18,9 @@ parameters:
   data.testpath:
     value: '$TMPDIR/dataset/test'
   data.batch_size:
-    value: 128
+    value: 64
   data.num_workers:
-    value: 8
+    value: 4
   data.valid_ratio:
     value: 0.2
   data.is_batch_weighted:
@@ -79,7 +79,7 @@ parameters:
     min: 0.0 
     max : 0.99
   model.pretrained_path:
-    value: 'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k'
+    value: "convnextv2_tiny.fcmae_ft_in22k_in1k"
   model.pretrained_in_color:
     value: True 
   model.freeze_pretrained:
