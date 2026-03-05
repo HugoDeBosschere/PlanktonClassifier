@@ -101,6 +101,9 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             data_config, use_cuda, train_transform=train_transform,valid_transform=valid_transform,tmp_trainpath=tmp_trainpath
         )
 
+        base_targets = train_loader.dataset.subset.dataset.targets
+        class_counts = torch.bincount(torch.tensor(base_targets)) #for the focal loss and the weighted loss
+
         if not "pretrained_path" in model_config:
             logging.info("We are not using a pretrained model ie custom model !")
             model = models.build_model(model_config, input_size, num_classes)
@@ -123,12 +126,12 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         focal_loss_set = ("FocalLoss", "focalloss","Focalloss", "focalLoss", "focal_loss", "FocalLoss ")
         if normalized_name in focal_loss_set:
             logging.info("We are using a Focal Loss")
-            loss = optim.get_focal_loss(config["data"]["trainpath"], device, loss_config["gamma"],tmp_trainpath=tmp_trainpath)
+            loss = optim.get_focal_loss(class_counts, device, loss_config["gamma"])
         elif is_weighted:
-            loss = optim.get_weighted_loss(lossname, config["data"]["trainpath"],device,tmp_trainpath=tmp_trainpath)
+            loss = optim.get_weighted_loss(lossname, class_counts, device)
             logging.info("We are using a weighted loss")
         else:
-            loss = optim.get_loss(loss_config, config["data"]["trainpath"],device )
+            loss = optim.get_loss(loss_config, config["data"]["trainpath"], device)
             logging.info("We are using a regular (non weighted) loss")
 
         # Build the optimizer

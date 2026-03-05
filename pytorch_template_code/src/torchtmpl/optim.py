@@ -3,26 +3,18 @@
 # External imports
 import torch
 import torch.nn as nn
-import torchvision
-import numpy as np 
+import torch.nn.functional as F
 
 def get_loss(loss_config, trainpath, device):
     gamma = loss_config["gamma"]
     lossname = loss_config["lossname"]
     return eval(f"nn.{lossname}()")
 
-def get_weighted_loss(lossname, trainpath,device,tmp_trainpath = None):
-    if tmp_trainpath:
-        trainpath = tmp_trainpath
-
-    base_dataset = base_dataset = torchvision.datasets.ImageFolder(
-        root=trainpath,
-    )
-    classes = np.array(base_dataset.targets) 
-    nb_sample_per_classes = np.bincount(classes)
-    print(f"nombre de sample pour chaque classe : {nb_sample_per_classes}")
-    weights_per_classes = 1 / nb_sample_per_classes
-    weights_tensor = torch.tensor(weights_per_classes,dtype=torch.float32).to(device)
+def get_weighted_loss(lossname, class_counts, device):
+    print(f"nombre de sample pour chaque classe : {class_counts}")
+    weights_per_classes = 1.0 / class_counts.float()
+    weights_tensor = weights_per_classes.to(device)
+    
     if hasattr(nn, lossname):
         loss = getattr(nn, lossname)
         # Instantiate: loss_class(weight=weights_tensor)
@@ -30,27 +22,30 @@ def get_weighted_loss(lossname, trainpath,device,tmp_trainpath = None):
     else:
         raise ValueError(f"Loss {lossname} not found in torch.nn")
 
-def get_focal_loss(trainpath, device, gamma,tmp_trainpath = None):
-    if tmp_trainpath:
-        trainpath = tmp_trainpath
-    
-    base_dataset = base_dataset = torchvision.datasets.ImageFolder(
-        root=trainpath,
-    )
-    classes = torch.tensor(base_dataset.targets) 
-    nb_sample_per_classes = torch.bincount(classes)
-    print(f"nombre de sample pour chaque classe : {nb_sample_per_classes}")
-    weights_per_classes = 1 / nb_sample_per_classes
+def get_focal_loss(class_counts, device, gamma):
+    print(f"nombre de sample pour chaque classe : {class_counts}")
+    weights_per_classes = 1.0 / class_counts.float()
     weights_per_classes = weights_per_classes.to(device)
 
     def focal_loss(outputs, targets):
-        softmax = nn.Softmax(dim = 0)
-        probas = softmax(outputs)
-        indexing = torch.arange(len(outputs))
-        proba = probas[indexing, targets]
+        # 1. Compute log probabilities stably across the class dimension
+        log_p = F.log_softmax(outputs, dim=1)
+        
+        # 2. Recover probabilities safely
+        p = torch.exp(log_p)
+        
+        # 3. Gather p_t and log(p_t) for the true classes in the batch
+        batch_idx = torch.arange(len(outputs))
+        p_t = p[batch_idx, targets]
+        log_p_t = log_p[batch_idx, targets]
+        
+        # 4. Gather class weights
         alphas = weights_per_classes[targets]
-        ones = torch.ones_like(proba)    
-        return torch.sum(alphas * (ones-proba)**gamma * (-torch.log(proba)))
+        
+        # 5. Compute Focal Loss: -alpha * (1 - p_t)^gamma * log(p_t)
+        loss = -alphas * ((1.0 - p_t) ** gamma) * log_p_t
+        
+        return loss.sum()
     
     return focal_loss
 

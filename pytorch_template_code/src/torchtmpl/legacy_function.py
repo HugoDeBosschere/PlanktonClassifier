@@ -219,3 +219,8 @@ def train(config):
             print(file)
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
             test(yaml.safe_load(file),tmp_testpath=tmp_testpath)
+
+
+"""
+old optim.py
+"""

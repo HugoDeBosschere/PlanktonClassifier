@@ -124,11 +124,9 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
     num_samples = 0
 
     gpu_transforms = v2.Compose([
-        v2.RandomHorizontalFlip(p=0.5),
-        v2.ElasticTransform(alpha=50.0, sigma=5.0),                        # Augmentation géométrique
-        v2.ColorJitter(brightness=0.2, contrast=0.2),          # Augmentation photométrique
-        v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0)
-    ])
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.ElasticTransform(alpha=50.0, sigma=5.0)
+        ])
 
 
     len_dataset = len(loader)
