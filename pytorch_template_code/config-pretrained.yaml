@@ -66,12 +66,12 @@ parameters:
     value: 0.0
   model.ona100: 
     value : True
-  #model.pretrained_path:
-  #  value: 'mobilenetv2_100' 
-  #model.pretrained_in_color:
-  #  value: True
-  #model.freeze_pretrained:
-  #  value: False 
+  model.pretrained_path:
+    value: 'mobilenetv2_100' 
+  model.pretrained_in_color:
+    value: True
+  model.freeze_pretrained:
+    value: False 
   #model.old_model_path:
   #  value: /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_24/best_model.pt
 
