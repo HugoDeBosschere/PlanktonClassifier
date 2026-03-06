@@ -59,35 +59,46 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         # Build the model
         logging.info("= Model")
         model_config = config["model"]
+        model_name = model_config["class"]
         train_transform = None
         valid_transform = None 
 
         if "pretrained_path" in model_config:
-            logging.info("using a pretrained model") 
+            pretrained_path = model_config["pretrained_path"]
+            logging.info(f"Instantiating {model_name} with pre-trained weights.")
             
-            model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
             
-            # Conditionally freeze the backbone
+            model_class = getattr(models.pretrained_models, model_name)
+            model = model_class(
+                pretrained_path=pretrained_path, 
+                num_classes=num_classes, 
+                **model_config 
+            )
+
+            # 2. Conditionally freeze the backbone using the unified interface
             freeze_pretrained = model_config.get("freeze_pretrained", False)
             if freeze_pretrained:
                 logging.info("Freezing the pre-trained backbone.")
-                for param in model.parameters():
+                for param in model.get_backbone().parameters():
                     param.requires_grad = False
+                
+                # Ensure the classifier block remains strictly unfrozen
+                for param in model.get_classifier().parameters():
+                    param.requires_grad = True
             else:
                 logging.info("Fine-tuning the entire model (backbone unfrozen).")
 
+
             if "old_model_path" in model_config:
                 old_model_path = model_config["old_model_path"]
-                logging.info(f"Loading model at {old_model_path}")
-                model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
-                classifier_module = model.get_classifier() 
-                for param in classifier_module.parameters(): #unfreezing the parameters of the classifier
-                    param.requires_grad = True
-            else:
-                model.reset_classifier(num_classes = NUM_CLASSES)
+                logging.info(f"Loading model state from {old_model_path}")
+                model.load_state_dict(torch.load(old_model_path, weights_only=True), strict=False)
+
             
-            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training=True,scale=(0.8, 1.0),color_jitter=0)
-            valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
+            
+            data_cfg = resolve_data_config(model.pretrained_cfg, model=model.get_backbone())
+            train_transform = create_transform(**data_cfg, is_training=True, scale=(0.8, 1.0), color_jitter=0)
+            valid_transform = create_transform(**data_cfg, is_training=False)
         
         pretrained_in_color = model_config.get("pretrained_in_color", False)#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
 
