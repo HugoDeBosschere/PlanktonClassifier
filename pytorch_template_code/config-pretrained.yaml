@@ -67,7 +67,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value:  'vit_small_plus_patch16_dinov3.lvd1689m'
+    value:  'mobilenetv2_100'
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:
