@@ -64,7 +64,8 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
 
         if "pretrained_path" in model_config:
             logging.info("using a pretrained model") 
-            model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
+            train_transform = create_transform(**data_cfg, is_training=True,scale=(0.8, 1.0),color_jitter=0) # Forces the crop to keep 80% to 100% of the image
+            
             
             # Conditionally freeze the backbone
             freeze_pretrained = model_config.get("freeze_pretrained", False)

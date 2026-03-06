@@ -89,7 +89,8 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
         custom_augs = v2.Compose([
             v2.ElasticTransform(alpha=50.0, sigma=5.0),
             v2.ColorJitter(brightness=0.2, contrast=0.2),
-            v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0)
+            v2.RandomAdjustSharpness(sharpness_factor=1.2, p=0.5),
+            v2.RandomRotation(degrees=180, interpolation=v2.InterpolationMode.BILINEAR)
         ])
         
         if pretrained_in_color:
