@@ -15,7 +15,7 @@ parameters:
   data.testpath:
     value: '$TMPDIR/dataset/test'
   data.batch_size:
-    value: 64
+    value: 32
   data.num_workers:
     value: 4
   data.valid_ratio:
@@ -67,7 +67,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value:  'vit_small_plus_patch16_dinov3.lvd1689m'
+    value:  "convnextv2_tiny.fcmae_ft_in22k_in1k"
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:
