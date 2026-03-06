@@ -1,7 +1,7 @@
 #This config is used to test several values 
 
 program: main.py
-name: LouisandHugosweep
+name: thebestsweepever
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
@@ -42,9 +42,9 @@ parameters:
 
     
   loss.lossname:
-    values: ["FocalLoss","CrossEntropyLoss"]
+    values: "FocalLoss"
   loss.is_weighted:
-    values: [True, False] 
+    values: False
   loss.gamma:
     distribution: uniform
     max: 5
@@ -70,7 +70,7 @@ parameters:
 
   
   model.class:
-    values: [PollenNet,VanillaCNN]
+    values: PollenNet
   model.num_layers:
     values: [3,4,5] 
   model.size_linear :
