@@ -67,7 +67,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value: 'mobilenetv2_100'
+    value: 'tinynet_e.in1k' 
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:
