@@ -64,7 +64,6 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
 
         if "pretrained_path" in model_config:
             logging.info("using a pretrained model") 
-            train_transform = create_transform(**data_cfg, is_training=True,scale=(0.8, 1.0),color_jitter=0) # Forces the crop to keep 80% to 100% of the image
             
             
             # Conditionally freeze the backbone
@@ -86,7 +85,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             else:
                 model.reset_classifier(num_classes = NUM_CLASSES)
             
-            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True)
+            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True,is_training=True,scale=(0.8, 1.0),color_jitter=0)
             valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
         
         pretrained_in_color = model_config.get("pretrained_in_color", False)#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
