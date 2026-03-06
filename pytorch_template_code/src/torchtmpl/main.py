@@ -302,6 +302,7 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
 
     model_name = config["model"]["class"]
     model_path_list = config["test"]["model_path"]
+    model_config = config["model"]
     
     if "pretrained_path" in model_config and model_config["pretrained_path"]:
         csv_base_name = model_config["pretrained_path"].replace("/", "_").replace(":", "_")

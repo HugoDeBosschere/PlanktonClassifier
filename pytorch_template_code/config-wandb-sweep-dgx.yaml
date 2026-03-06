@@ -57,9 +57,9 @@ parameters:
   train.is_weighted:
     values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
-    value: True
+    value: False
   train.nepochs: 
-    value: 1
+    value: 10
 
   
   logging.logdir:
