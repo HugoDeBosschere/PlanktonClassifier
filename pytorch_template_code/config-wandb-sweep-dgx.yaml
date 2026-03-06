@@ -42,9 +42,9 @@ parameters:
 
     
   loss.lossname:
-    values: "FocalLoss"
+    value: "FocalLoss"
   loss.is_weighted:
-    values: False
+    value: False
   loss.gamma:
     distribution: uniform
     max: 5
@@ -70,7 +70,7 @@ parameters:
 
   
   model.class:
-    values: PollenNet
+    value: PollenNet
   model.num_layers:
     values: [3,4,5] 
   model.size_linear :
