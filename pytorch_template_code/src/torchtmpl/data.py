@@ -123,6 +123,10 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
             v2.ToImage(), 
             v2.ToDtype(torch.float32, scale=True),
         ])
+        
+    print("=== TRAIN TRANSFORM PIPELINE ===")
+    print(train_transform)
+
     if tmp_trainpath:
         trainpath = tmp_trainpath
     else:
