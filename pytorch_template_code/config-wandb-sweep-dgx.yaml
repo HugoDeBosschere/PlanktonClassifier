@@ -5,7 +5,7 @@ name: hyperbandtest
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
-method: random 
+method: bayes 
 metric:
   goal: maximize
   name: f1score
@@ -32,7 +32,7 @@ parameters:
   optim.params.lr:
       distribution: log_uniform_values
       max: 0.1 
-      min : 0.0001
+      min : 0.00001
   optim.params.weight_decay:
       distribution: log_uniform_values
       max: 0.5 
@@ -53,7 +53,7 @@ parameters:
 
   
   train.nepochs: 
-    value: 35
+    value: 10
   train.is_weighted:
     values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
@@ -78,12 +78,12 @@ parameters:
   model.prob_droupout:
     min: 0.0 
     max : 0.99
-  model.pretrained_path:
-    value: 'mobilenetv2_100'
-  model.pretrained_in_color:
-    value: True 
-  model.freeze_pretrained:
-    value: False
+  #model.pretrained_path:
+  #  value: 'mobilenetv2_100'
+  #model.pretrained_in_color:
+  #  value: True 
+  #model.freeze_pretrained:
+  #  value: False
   #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
 
 
