@@ -10,11 +10,11 @@ import torch.nn as nn
 import timm
 
 class SimpleClassifier(nn.Module):
-    def __init__(self, pretrained_path, num_classes=86, **kwargs):
+    def __init__(self, pretrained_path, pretrained = True, num_classes=86, **kwargs):
         super().__init__()
         
         # Conserve la tête de classification standard de timm
-        self.backbone = timm.create_model(pretrained_path, pretrained=True, num_classes=num_classes)
+        self.backbone = timm.create_model(pretrained_path, pretrained=pretrained, num_classes=num_classes)
         self.pretrained_cfg = self.backbone.pretrained_cfg
 
     def forward(self, x, extract_features=False):
@@ -32,11 +32,11 @@ class SimpleClassifier(nn.Module):
 
 
 class PlanktonClassifier(nn.Module):
-    def __init__(self, pretrained_path, num_classes=86, **kwargs):
+    def __init__(self, pretrained_path, num_classes=86, pretrained = True, **kwargs):
         super().__init__()
         
         # 1. Extracteur de caractéristiques
-        self.feature_extractor = timm.create_model(pretrained_path, pretrained=True, num_classes=0)
+        self.feature_extractor = timm.create_model(pretrained_path, pretrained=pretrained, num_classes=0)
         self.pretrained_cfg = self.feature_extractor.pretrained_cfg
         
         in_features = self.feature_extractor.num_features 

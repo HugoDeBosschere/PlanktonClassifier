@@ -70,9 +70,9 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             
             model_class = getattr(models.pretrained_models, model_name)
             model = model_class(
-                pretrained_path=pretrained_path, 
+                pretrained_path=pretrained_path,
+                pretrained = True, 
                 num_classes=num_classes, 
-                **model_config 
             )
 
             # 2. Conditionally freeze the backbone using the unified interface
@@ -333,7 +333,11 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
         model_config = config["model"]
 
         if "pretrained_path" in model_config and model_config["pretrained_path"]:
-            model = timm.create_model(model_config["pretrained_path"], pretrained=False, num_classes=num_classes)
+            model = model_class(
+                pretrained_path=pretrained_path,
+                pretrained = False, 
+                num_classes=num_classes, 
+            )
         else:
             model_class = getattr(models.cnn_models, model_name)
             model = model_class(model_config, input_size, num_classes)
