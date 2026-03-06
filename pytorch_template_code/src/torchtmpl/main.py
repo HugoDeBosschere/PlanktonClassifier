@@ -85,7 +85,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             else:
                 model.reset_classifier(num_classes = NUM_CLASSES)
             
-            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True,is_training=True,scale=(0.8, 1.0),color_jitter=0)
+            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training=True,scale=(0.8, 1.0),color_jitter=0)
             valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
         
         pretrained_in_color = model_config.get("pretrained_in_color", False)#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
