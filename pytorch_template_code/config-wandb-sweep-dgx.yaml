@@ -1,0 +1,102 @@
+#This config is used to test several values 
+
+program: main.py
+name: hyperbandtest
+project: WinningKaggle
+entity: hugo-debosschere-are-na
+count: 132
+method: random 
+metric:
+  goal: maximize
+  name: f1score
+
+
+parameters:
+  
+  data.trainpath:
+    value: '$TMPDIR/dataset/train'
+  data.testpath:
+    value: '$TMPDIR/dataset/test'
+  data.batch_size:
+    value: 64
+  data.num_workers:
+    value: 4
+  data.valid_ratio:
+    value: 0.2
+  data.is_batch_weighted:
+    value: False #If True, The dataloader are initialized with a RandomWeightedSampler
+
+  
+  optim.algo:
+    value : AdamW
+  optim.params.lr:
+      distribution: log_uniform_values
+      max: 0.1 
+      min : 0.0001
+  optim.params.weight_decay:
+      distribution: log_uniform_values
+      max: 0.5 
+      min : 0.0001
+  optim.params.amsgrad:
+    values: [True, False]
+
+    
+  loss.lossname:
+    values: ["FocalLoss","CrossEntropyLoss"]
+  loss.is_weighted:
+    values: [True, False] 
+  loss.gamma:
+    distribution: uniform
+    max: 5
+    min: 1
+
+
+  
+  train.nepochs: 
+    value: 35
+  train.is_weighted:
+    values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+  train.test_end_train:
+    value: True
+  train.nepochs: 
+    value: 1
+
+  
+  logging.logdir:
+    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs # Better to provide the fullpath, especially on the cluster
+  logging.save_dir:
+    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
+
+
+  
+  model.class:
+    values: [PollenNet,VanillaCNN]
+  model.num_layers:
+    values: [3,4,5] 
+  model.size_linear :
+    values: [256,512,1024]
+  model.prob_droupout:
+    min: 0.0 
+    max : 0.99
+  model.pretrained_path:
+    value: 'mobilenetv2_100'
+  model.pretrained_in_color:
+    value: True 
+  model.freeze_pretrained:
+    value: False
+  #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
+
+
+#'vit_small_plus_patch16_dinov3.lvd1689m' -> pretty good ->  /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/PollenNet_21
+#"convnextv2_tiny.fcmae_ft_in22k_in1k" -> okay ->  /raid/home/students/hugodebosschere/DeepLearning/pytorch_template_code/logs/VanillaCNN_68
+#'vit_base_patch16_dinov3.lvd1689m' -> 
+#'efficientnet_b3.ra2_in1k'
+#'convnext_tiny.dinov3_lvd1689m' -> not good
+#'resnet50.a1_in1k' -> not good 
+#'levit_128s.fb_dist_in1k'
+#'levit_256.fb_dist_in1k' -> not good
+#'tiny_vit_11m_224.dist_in22k_ft_in1k' -> not good
+#'vit_base_patch16_clip_224.laion2b_ft_in12k_in1k' -> pretty good
+#'tinynet_e.in1k' 
+#"hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+#mobilenetv2
