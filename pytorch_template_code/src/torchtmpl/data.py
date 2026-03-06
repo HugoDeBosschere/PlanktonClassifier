@@ -3,6 +3,7 @@
 # Standard imports
 import logging
 import random
+import os
 
 # External imports
 import torch
@@ -13,6 +14,7 @@ from torchvision import transforms
 from torchvision.transforms import v2
 import numpy as np
 import matplotlib.pyplot as plt
+import torchvision.datasets as datasets
 
 
 
@@ -96,7 +98,7 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
             train_transform.transforms.insert(0, to_rgb)
             if valid_transform:
                 valid_transform.transforms.insert(0, to_rgb)
-                
+
         for i, t in enumerate(train_transform.transforms):
             if isinstance(t, transforms.ToTensor):
                 train_transform.transforms.insert(i, custom_augs)
@@ -202,8 +204,7 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
 
     return train_loader, valid_loader, input_size, num_classes
 
-import torchvision.datasets as datasets
-import os
+
 
 class TestDataset(datasets.ImageFolder):
     """

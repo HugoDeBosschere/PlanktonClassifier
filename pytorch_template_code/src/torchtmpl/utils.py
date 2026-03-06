@@ -253,3 +253,57 @@ def test_f1score(model, loader, num_classes, device):
     
     # 6. Macro Average
     return f1_per_class.mean().item()
+
+@torch.no_grad()
+def evaluate(model, loader, f_loss, num_classes, device):
+    """
+    Evaluates the model over the loader, returning both the average loss 
+    and the macro F1-score in a single forward pass.
+    """
+    model.eval()
+
+    total_loss = 0.0
+    num_samples = 0
+    
+    # Initialize accumulators for global F1 counts
+    total_tp = torch.zeros(num_classes, device=device)
+    total_fp = torch.zeros(num_classes, device=device)
+    total_fn = torch.zeros(num_classes, device=device)
+    
+    eps = 1e-7
+
+    for inputs, targets in loader:
+        # non_blocking=True allows asynchronous memory transfer to the GPU
+        inputs = inputs.to(device, non_blocking=True)
+        targets = targets.to(device, non_blocking=True)
+
+        # 1. Single Forward Pass
+        outputs = model(inputs)
+        
+        # 2. Compute and Accumulate Loss
+        loss = f_loss(outputs, targets)
+        total_loss += inputs.shape[0] * loss.detach()
+        num_samples += inputs.shape[0]
+        
+        # 3. Get Predictions
+        preds = torch.argmax(outputs, dim=1)
+
+        # 4. One-Hot Encode
+        pred_hot = F.one_hot(preds.to(torch.long), num_classes).float()
+        target_hot = F.one_hot(targets.to(torch.long), num_classes).float()
+
+        # 5. Accumulate TP, FP, FN
+        total_tp += (pred_hot * target_hot).sum(dim=0)
+        total_fp += (pred_hot * (1 - target_hot)).sum(dim=0)
+        total_fn += ((1 - pred_hot) * target_hot).sum(dim=0)
+
+    # Finalize Global Metrics
+    avg_loss = total_loss.item() / num_samples
+    
+    precision = total_tp / (total_tp + total_fp + eps)
+    recall = total_tp / (total_tp + total_fn + eps)
+    f1_per_class = 2 * (precision * recall) / (precision + recall + eps)
+    macro_f1 = f1_per_class.mean().item()
+
+    return avg_loss, macro_f1
+

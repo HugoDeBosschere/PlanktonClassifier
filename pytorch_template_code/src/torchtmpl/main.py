@@ -213,17 +213,11 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             time_of_training = (time.time() - time_before_training )/60
             logging.info(f"This epoch took {time_of_training} minutes to train")
 
-            # Test. if using the f1score to maximize, this is useless 
-            time_before_test= time.time()
-            test_loss = utils.test(model, valid_loader, loss, device)
+            time_before_test = time.time()
+            test_loss, f1score = utils.evaluate(model, valid_loader, loss, num_classes, device)
             time_of_test = (time.time() - time_before_test) / 60 
-            logging.info(f"This test took {time_of_test} minutes to test")
+            logging.info(f"Validation (loss + f1score) took {time_of_test:.2f} minutes")
 
-            # Test f1score
-            time_before_test= time.time()
-            f1score = utils.test_f1score(model, valid_loader, num_classes, device)
-            time_of_test = (time.time() - time_before_test) / 60 
-            logging.info(f"This f1score took {time_of_test} minutes to test")
 
             updated_loss = model_checkpoint_loss.update(test_loss)
             logging.info(
