@@ -35,9 +35,9 @@ parameters:
 
     
   loss.lossname:
-    value: "FocalLoss"
+    value: "CrossEntropyLoss"
   loss.is_weighted:
-    value: False
+    value: True
   loss.gamma:
     value: 2
 
@@ -67,7 +67,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value:  "convnextv2_tiny.fcmae_ft_in22k_in1k"
+    value: 'mobilenetv2_100'
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:
