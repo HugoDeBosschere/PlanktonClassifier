@@ -88,7 +88,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True)
             valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
         
-            pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
+        pretrained_in_color = model_config.get("pretrained_in_color", False)#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
 
         # Build the dataloaders
         logging.info("= Building the dataloaders")
