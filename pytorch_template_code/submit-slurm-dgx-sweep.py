@@ -10,7 +10,7 @@ def makejob(commit_id, configpath, nruns, func):
     return f"""#!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --gres=nvidia_a100-sxm4-80gb:1
+#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
 #SBATCH --job-name=80mobilenet
 #SBATCH --nodes=1
 #SBATCH --partition=prod80
