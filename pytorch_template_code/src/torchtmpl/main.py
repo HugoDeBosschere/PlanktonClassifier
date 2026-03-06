@@ -65,6 +65,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         if "pretrained_path" in model_config:
             logging.info("using a pretrained model") 
             
+            model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
             
             # Conditionally freeze the backbone
             freeze_pretrained = model_config.get("freeze_pretrained", False)
