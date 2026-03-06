@@ -96,11 +96,11 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
             train_transform.transforms.insert(0, to_rgb)
             if valid_transform:
                 valid_transform.transforms.insert(0, to_rgb)
-            # Insert augmentations at index 1 for the TRAINING set only
-            train_transform.transforms.insert(1, custom_augs)
-        else:
-            # If no RGB conversion is needed, just inject augmentations at index 0
-            train_transform.transforms.insert(0, custom_augs)
+                
+        for i, t in enumerate(train_transform.transforms):
+            if isinstance(t, transforms.ToTensor):
+                train_transform.transforms.insert(i, custom_augs)
+                break
 
     # Fallback for custom, non-pretrained models
     else:
