@@ -87,18 +87,16 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             
             train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True)
             valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
-            pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
-            if pretrained_in_color:
-                to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))# Does the necessary modifications so that the image now has 3 channels (corresponding to RGB)
-                train_transform.transforms.insert(0, to_rgb) #Adds the duplication of channels at the beginning of transform
-                valid_transform.transforms.insert(0, to_rgb)
+        
+        pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
+
         # Build the dataloaders
         logging.info("= Building the dataloaders")
         data_config = config["data"]
         batch_size = data_config["batch_size"]
 
         train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
-            data_config, use_cuda, train_transform=train_transform,valid_transform=valid_transform,tmp_trainpath=tmp_trainpath
+            data_config, use_cuda, train_transform=train_transform,valid_transform=valid_transform,tmp_trainpath=tmp_trainpath,pretrained_in_color=pretrained_in_color 
         )
 
         base_targets = train_loader.dataset.subset.dataset.targets
@@ -141,8 +139,12 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         logging.info(f"We are running the latest code ! Yay !")
         # Build the callbacks
         logging_config = config["logging"]
-        # Let us use as base logname the class name of the modek
-        logname = model_config["class"]
+        # The logname is the pretrained path if it exists, the name of the base model if it doesn't
+        if "pretrained_path" in model_config and model_config["pretrained_path"]:
+            logname = model_config["pretrained_path"].replace("/", "_").replace(":", "_")
+        else:
+            logname = model_config["class"]
+
         logdir = utils.generate_unique_logpath(logging_config["logdir"], logname)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
@@ -307,16 +309,27 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
     model_name = config["model"]["class"]
     model_path_list = config["test"]["model_path"]
     
+    if "pretrained_path" in model_config and model_config["pretrained_path"]:
+        csv_base_name = model_config["pretrained_path"].replace("/", "_").replace(":", "_")
+    else:
+        csv_base_name = model_name
+
     # Hoisted outside the loop
     save_dir = config["test"]["save_dir"] 
     
     for model_path in model_path_list:
         print(f"We are currently testing the model at {model_path}")
-        unique_save_path = utils.generate_unique_csv(save_dir,model_name)
+        unique_save_path = utils.generate_unique_csv(save_dir,csv_base_name)
         print(f"unique save path is {unique_save_path}")
         test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda,tmp_testpath=tmp_testpath)
         
         model_config = config["model"]
+
+        if "pretrained_path" in model_config and model_config["pretrained_path"]:
+            model = timm.create_model(model_config["pretrained_path"], pretrained=False, num_classes=num_classes)
+        else:
+            model_class = getattr(models.cnn_models, model_name)
+            model = model_class(model_config, input_size, num_classes)
 
         model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
         model.load_state_dict(torch.load(model_path, weights_only=True))

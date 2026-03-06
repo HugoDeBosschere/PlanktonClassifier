@@ -15,7 +15,7 @@ parameters:
   data.testpath:
     value: '$TMPDIR/dataset/test'
   data.batch_size:
-    value: 256
+    value: 512
   data.num_workers:
     value: 8
   data.valid_ratio:

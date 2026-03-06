@@ -75,22 +75,52 @@ class DatasetTransformer(torch.utils.data.Dataset):
         return len(self.subset)
 
 
-def get_dataloaders(data_config, use_cuda,train_transform=None,valid_transform = None,tmp_trainpath=None):
+def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform=None, tmp_trainpath=None, pretrained_in_color=True):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
     num_workers = data_config["num_workers"]
     is_batch_weighted = data_config["is_batch_weighted"]
     logging.info("  - Dataset creation")
 
-    if not train_transform:
-        train_transform = v2.Compose(
-            [v2.Grayscale(), 
-            v2.Resize((128, 128),antialias = True),
-            v2.ToImage(), 
-            v2.ToDtype(torch.float32,scale = True),]
-        )
-        valid_transform = train_transform
+    # If timm provided the base transforms, inject our custom logic into them
+    if train_transform is not None:
+        custom_augs = v2.Compose([
+            v2.ElasticTransform(alpha=50.0, sigma=5.0),
+            v2.ColorJitter(brightness=0.2, contrast=0.2),
+            v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0)
+        ])
+        
+        if pretrained_in_color:
+            to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))
+            # Insert RGB conversion at index 0 for both
+            train_transform.transforms.insert(0, to_rgb)
+            if valid_transform:
+                valid_transform.transforms.insert(0, to_rgb)
+            # Insert augmentations at index 1 for the TRAINING set only
+            train_transform.transforms.insert(1, custom_augs)
+        else:
+            # If no RGB conversion is needed, just inject augmentations at index 0
+            train_transform.transforms.insert(0, custom_augs)
 
+    # Fallback for custom, non-pretrained models
+    else:
+        train_transform = v2.Compose([
+            v2.Grayscale(), 
+            v2.Resize((128, 128), antialias=True),
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.ElasticTransform(alpha=50.0, sigma=5.0),
+            v2.ColorJitter(brightness=0.2, contrast=0.2),
+            v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0),
+            v2.ToImage(), 
+            v2.ToDtype(torch.float32, scale=True),
+        ])
+        
+        valid_transform = v2.Compose([
+            v2.Grayscale(), 
+            v2.Resize((128, 128), antialias=True),
+            v2.ToImage(), 
+            v2.ToDtype(torch.float32, scale=True),
+        ])
     if tmp_trainpath:
         trainpath = tmp_trainpath
     else:
