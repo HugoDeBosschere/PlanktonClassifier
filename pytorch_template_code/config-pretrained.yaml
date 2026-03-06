@@ -67,7 +67,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value:  "convnextv2_tiny.fcmae_ft_in22k_in1k"
+    value:  'vit_small_plus_patch16_dinov3.lvd1689m'
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:
