@@ -35,10 +35,26 @@ from . import utils
 
 NUM_CLASSES = 86
 
+def is_cuda_usable():
+    """
+    Check if CUDA is not only available but also actually usable.
+    Returns True if CUDA can be used, False otherwise.
+    """
+    if not torch.cuda.is_available():
+        return False
+    try:
+        # Try to create a tensor on CUDA to verify it's actually usable
+        test_tensor = torch.zeros(1).cuda()
+        del test_tensor
+        torch.cuda.empty_cache()
+        return True
+    except (RuntimeError, torch.cuda.DeviceError):
+        return False
+
 def train_sweep(tmp_testpath=None, tmp_trainpath=None):
     print("Nouvelle run")
     print("Nouvelle run, nouveau code, gros gain")
-    use_cuda = torch.cuda.is_available()
+    use_cuda = is_cuda_usable()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
 
@@ -275,7 +291,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
 def train(config):
     print("Debut du train")
     print("Are we running an old version ?")
-    use_cuda = torch.cuda.is_available()
+    use_cuda = is_cuda_usable()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"We are using {device} for training")
 
@@ -476,7 +492,7 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
 
     The name of the file is still to be discussed but we can imagine taking the jobid of the slurm submission
     """
-    use_cuda = torch.cuda.is_available()
+    use_cuda = is_cuda_usable()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"Device used {device}")
     print("Yay on utilise la nouvelle fonction de test !")
@@ -498,14 +514,39 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
         save_dir = config["test"]["save_dir"]
         unique_save_path = utils.generate_unique_csv(save_dir,model_name)
         print(f"unique save path is {unique_save_path}")
-        test_loader, input_size, num_classes = data.get_test_dataloaders(
-            config, use_cuda, tmp_testpath=tmp_testpath
-        )
         
         model_config = config["model"]
-
+        
+        # Check if model requires RGB input (e.g., PlanktonMobileNet uses pretrained MobileNetV2)
+        requires_rgb = model_name == "PlanktonMobileNet"
+        test_transform = None
+        
+        if requires_rgb:
+            print("PlanktonMobileNet detected: setting up RGB transform using timm data config")
+            # Create a lightweight model (pretrained=False) just to get the config structure
+            # This is much faster than loading pretrained weights
+            # PlanktonMobileNet uses mobilenetv2_140 from timm
+            temp_model = timm.create_model('mobilenetv2_140', pretrained=False, num_classes=86)
+            data_cfg = resolve_data_config(temp_model.pretrained_cfg, model=temp_model)
+            #test_transform = create_transform(**data_cfg, is_training=False)
+            test_transform = transforms.Compose([utils.ResizeAndPadToSquare(224),
+            transforms.Grayscale(num_output_channels=3), # Duplication du canal pour le CNN [cite: 205, 208]
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    
+            del temp_model  # Clean up immediately
+            
+            # Add RGB conversion at the beginning of the transform pipeline
+            # This converts grayscale PIL images to RGB before other transforms
+            #to_rgb = transforms.Lambda(lambda x: x.convert("RGB") if x.mode != "RGB" else x)
+            #test_transform.transforms.insert(0, to_rgb)
+        
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+            config, use_cuda, tmp_testpath=tmp_testpath, transform=test_transform
+        ) 
+        
         model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
-        model.load_state_dict(torch.load(model_path, weights_only=False))
+        model.load_state_dict(torch.load(model_path))
         model.to(device)
 
         with open(unique_save_path,"w") as file:
@@ -530,10 +571,10 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
 
                     # Vertical flip
                     logits_list.append(model(torch.flip(img, dims=[2])))
-                    # Rotations: ±15°, ±30°
-                    # for angle in [15, -15, 30, -30]:
-                    #     img_rotated = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR, fill=0)
-                    #     logits_list.append(model(img_rotated))
+                    #Rotations: ±15°, ±30°
+                    for angle in [15, -15, 30, -30]:
+                        img_rotated = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR, fill=0)
+                        logits_list.append(model(img_rotated))
                     
                     # Translations: small shifts in x and y directions
                     # Translation parameters: (tx, ty) in pixels
@@ -574,6 +615,185 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
 
 
 @torch.no_grad()
+def test_ensemble(config_paths, send_kaggle_bool=True, tmp_testpath=None, ensemble_method="average_logits"):
+    """
+    Ensemble inference using multiple models, each with its own config.yaml file.
+    
+    Args:
+        config_paths: List of paths to config.yaml files, one per model
+        send_kaggle_bool: Whether to automatically submit to Kaggle
+        tmp_testpath: Optional temporary test path override
+        ensemble_method: How to combine predictions. Options:
+            - "average_logits": Average logits from all models (soft voting)
+            - "majority_vote": Majority voting on predictions (hard voting)
+    
+    The function:
+    1. Loads each model from its config file
+    2. Runs inference with each model (with optional TTA per model)
+    3. Combines predictions using the specified method
+    4. Writes final predictions to CSV
+    """
+    use_cuda = is_cuda_usable()
+    device = torch.device("cuda") if use_cuda else torch.device("cpu")
+    print(f"Device used {device}")
+    print(f"Running ensemble inference with {len(config_paths)} models")
+    print(f"Ensemble method: {ensemble_method}")
+    
+    # Load all configs and models
+    configs = []
+    loaded_models = []
+    test_loaders = []
+    model_names = []
+    
+    for i, config_path in enumerate(config_paths):
+        print(f"\n--- Loading model {i+1}/{len(config_paths)} from {config_path} ---")
+        config = yaml.safe_load(open(config_path, "r"))
+        configs.append(config)
+        
+        model_name = config["model"]["class"]
+        model_names.append(model_name)
+        print(f"Model name: {model_name}")
+        
+        # Get model path from config
+        model_path_list = config["test"]["model_path"]
+        if isinstance(model_path_list, list):
+            model_path = model_path_list[0]  # Use first model path if list
+        else:
+            model_path = model_path_list
+        
+        # Check if model requires RGB input
+        requires_rgb = model_name == "PlanktonMobileNet"
+        test_transform = None
+        
+        if requires_rgb:
+            print("PlanktonMobileNet detected: setting up RGB transform")
+            temp_model = timm.create_model('mobilenetv2_140', pretrained=False, num_classes=86)
+            data_cfg = resolve_data_config(temp_model.pretrained_cfg, model=temp_model)
+            test_transform = transforms.Compose([
+                utils.ResizeAndPadToSquare(224),
+                transforms.Grayscale(num_output_channels=3),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+            del temp_model
+        
+        # Build test dataloader for this model
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+            config, use_cuda, tmp_testpath=tmp_testpath, transform=test_transform
+        )
+        test_loaders.append(test_loader)
+        
+        # Build and load model
+        model_config = config["model"]
+        model = eval(f"models.cnn_models.{model_name}({model_config}, {input_size}, {num_classes})")
+        model.load_state_dict(torch.load(model_path, weights_only=True))
+        model.to(device)
+        model.eval()
+        loaded_models.append(model)
+        print(f"Model {i+1} loaded successfully")
+    
+    # Verify all models have the same number of classes
+    num_classes_list = [len(loader.dataset.classes) for loader in test_loaders]
+    if len(set(num_classes_list)) > 1:
+        raise ValueError(f"Models have different numbers of classes: {num_classes_list}")
+    num_classes = num_classes_list[0]
+    
+    # Get save directory from first config
+    save_dir = configs[0]["test"]["save_dir"]
+    ensemble_name = "_".join(model_names) + "_ensemble"
+    unique_save_path = utils.generate_unique_csv(save_dir, ensemble_name)
+    print(f"\nSaving ensemble predictions to: {unique_save_path}")
+    
+    # Get TTA settings for each model
+    use_tta_list = []
+    for config in configs:
+        test_cfg = config.get("test", {}) if isinstance(config, dict) else {}
+        use_tta = bool(test_cfg.get("tta", False))
+        use_tta_list.append(use_tta)
+        if use_tta:
+            print(f"Model {config['model']['class']}: TTA ENABLED")
+        else:
+            print(f"Model {config['model']['class']}: TTA DISABLED")
+    
+    # Run ensemble inference
+    # Note: We assume all dataloaders:
+    # 1. Iterate in the same order (same test path)
+    # 2. Have the same batch size (recommended: use same batch_size in all configs)
+    # 3. Process the same test images (same testpath in configs)
+    # We iterate through them in parallel.
+    with open(unique_save_path, "w") as file:
+        file.write("imgname,label \n")
+        
+        # Create iterators for all dataloaders
+        dataloader_iters = [iter(loader) for loader in test_loaders]
+        
+        batch_idx = 0
+        while True:
+            try:
+                # Get batches from all dataloaders in parallel
+                batches = []
+                filenames = None
+                for loader_iter in dataloader_iters:
+                    img_batch, fnames = next(loader_iter)
+                    img_batch = img_batch.to(device)
+                    batches.append(img_batch)
+                    if filenames is None:
+                        filenames = fnames  # Use filenames from first loader
+                
+                # Collect logits from all models
+                all_logits = []
+                
+                for model, img_batch, use_tta in zip(loaded_models, batches, use_tta_list):
+                    if use_tta:
+                        logits_list = []
+                        # Original
+                        logits_list.append(model(img_batch))
+                        # Horizontal flip
+                        logits_list.append(model(torch.flip(img_batch, dims=[3])))
+                        # Vertical flip
+                        logits_list.append(model(torch.flip(img_batch, dims=[2])))
+                        # Average logits over all augmented versions
+                        logits = torch.stack(logits_list, dim=0).mean(dim=0)
+                    else:
+                        logits = model(img_batch)
+                    
+                    all_logits.append(logits)
+                
+                # Combine predictions
+                if ensemble_method == "average_logits":
+                    # Average logits (soft voting)
+                    ensemble_logits = torch.stack(all_logits, dim=0).mean(dim=0)
+                    preds = torch.argmax(ensemble_logits, dim=1)
+                elif ensemble_method == "majority_vote":
+                    # Majority voting (hard voting)
+                    all_preds = [torch.argmax(logits, dim=1) for logits in all_logits]
+                    # Stack predictions and take mode
+                    preds_stack = torch.stack(all_preds, dim=0)  # Shape: (num_models, batch_size)
+                    # Use mode (most common prediction) for each sample
+                    preds, _ = torch.mode(preds_stack, dim=0)
+                else:
+                    raise ValueError(f"Unknown ensemble_method: {ensemble_method}. Use 'average_logits' or 'majority_vote'")
+                
+                # Write predictions
+                for pred, filename in zip(preds, filenames):
+                    file.write(f"{filename}, {pred.item()} \n")
+                
+                batch_idx += 1
+                if batch_idx % 10 == 0:
+                    print(f"Processed {batch_idx} batches")
+                    
+            except StopIteration:
+                # All dataloaders exhausted
+                break
+    
+    print("Ensemble inference finished.")
+    if send_kaggle_bool:
+        send_kaggle(unique_save_path)
+    
+    return None
+
+
+@torch.no_grad()
 def test_zero_shot_clip(config, send_kaggle_bool=True, tmp_testpath=None, tmp_trainpath=None):
     """
     Zero-shot classification using OpenCLIP LAION models:
@@ -581,7 +801,7 @@ def test_zero_shot_clip(config, send_kaggle_bool=True, tmp_testpath=None, tmp_tr
     - Convert each test image -> image embedding
     - Compare cosine similarity and pick the highest score
     """
-    use_cuda = torch.cuda.is_available()
+    use_cuda = is_cuda_usable()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"Device used {device}")
     print("Running zero-shot classification with OpenCLIP")
@@ -670,7 +890,7 @@ def test_supervised_clip(config, send_kaggle_bool=False, tmp_testpath=None, tmp_
     - Build one prototype per class (mean embedding)
     - For each test image, encode with CLIP and pick the class with highest cosine similarity
     """
-    use_cuda = torch.cuda.is_available()
+    use_cuda = is_cuda_usable()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
     print(f"Device used {device}")
     print("Running supervised prototype-based classification with OpenCLIP")
@@ -794,14 +1014,29 @@ if __name__ == "__main__":
     
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
-    if len(sys.argv) != 3:
-        logging.error(f"Usage : {sys.argv[0]} config.yaml <train|test>")
+    if len(sys.argv) < 3:
+        logging.error(f"Usage : {sys.argv[0]} config.yaml <train|test|test_ensemble>")
+        logging.error(f"For test_ensemble: {sys.argv[0]} config1.yaml,config2.yaml,... test_ensemble [ensemble_method]")
         sys.exit(-1)
 
-    logging.info("Loading {}".format(sys.argv[1]))
-    config = yaml.safe_load(open(sys.argv[1], "r"))
+    config_path = sys.argv[1]
     command = sys.argv[2]
-    eval(f"{command}(config)")
+    
+    # Handle ensemble mode specially
+    if command == "test_ensemble":
+        # For ensemble, config_path should be comma-separated list of config files
+        config_paths = [path.strip() for path in config_path.split(",")]
+        logging.info(f"Running ensemble with {len(config_paths)} models")
+        for i, path in enumerate(config_paths):
+            logging.info(f"  Model {i+1}: {path}")
+        
+        # Optional ensemble method (default: average_logits)
+        ensemble_method = sys.argv[3] if len(sys.argv) > 3 else "average_logits"
+        test_ensemble(config_paths, ensemble_method=ensemble_method)
+    else:
+        logging.info("Loading {}".format(config_path))
+        config = yaml.safe_load(open(config_path, "r"))
+        eval(f"{command}(config)")
     
     """
     sweep_configuration = sys.argv[2]

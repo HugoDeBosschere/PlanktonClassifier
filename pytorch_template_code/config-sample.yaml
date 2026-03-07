@@ -50,6 +50,6 @@ clip:
 test:
   model_path: ["best_model_from_scratch.pt"]  # or your existing list
   save_dir : /usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test_tta
-  tta: True
+  tta: False
 
 #tmp_testpath: "./test"

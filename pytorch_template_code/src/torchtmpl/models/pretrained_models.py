@@ -36,11 +36,12 @@ class PretrainedModel(nn.Module):
 
 class PlanktonMobileNet_class(nn.Module):
     def __init__(self, num_classes=86):
-        super(PlanktonMobileNet, self).__init__()
+        super(PlanktonMobileNet_class, self).__init__()
         
         # 1. Extracteur de caractéristiques (MobileNetV2 avec width multiplier 1.4)
         # num_classes=0 retire la tête de classification d'origine.
-        self.feature_extractor = timm.create_model('mobilenetv2_140', pretrained=True, num_classes=0)
+        # pretrained=False because we load fine-tuned weights from checkpoint immediately after
+        self.feature_extractor = timm.create_model('mobilenetv2_140', pretrained=False, num_classes=0)
         
         # Récupération dynamique de la dimension du vecteur
         in_features = self.feature_extractor.num_features # 1792
@@ -60,6 +61,8 @@ class PlanktonMobileNet_class(nn.Module):
         Passe avant du réseau.
         Si extract_features=True, renvoie le vecteur profond de dimension 1792.
         """
+
+        
         # Extraction des features : [Batch, 3, 224, 224] -> [Batch, 1792]
         deep_features = self.feature_extractor(x)
         

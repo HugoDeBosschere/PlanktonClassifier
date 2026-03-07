@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 # Local imports
-from .pretrained_models import PlanktonMobileNet as PlanktonMobileNetClass
+from .pretrained_models import PlanktonMobileNet
 
 
 def conv_relu_bn(cin, cout):
