@@ -21,7 +21,9 @@ wheels/
 MANIFEST
 
 # Environments
-venv/
+.venv/
+dataset/
+
 
 # logs and wandb
 logs/*
