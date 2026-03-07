@@ -149,8 +149,8 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         optim_config = config["optim"]
         optimizer = optim.get_optimizer(optim_config, filter(lambda p: p.requires_grad, model.parameters()))
         
-        lr_decay = config["scheduler"].get("lr_decay", 1.0) 
-        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=lr_decay)
+         
+        scheduler = optim.get_scheduler(optimizer, config)
         
         logging.info(f"the lr_decay rate is {lr_decay} %")
 

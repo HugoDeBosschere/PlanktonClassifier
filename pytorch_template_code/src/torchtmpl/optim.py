@@ -4,6 +4,20 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim.lr_scheduler as lr_scheduler
+
+
+def get_scheduler(optimizer, config):
+    """
+    Returns the scheduler based on the config.
+    """
+    # Access the new 'scheduler' block directly from the root config
+    scheduler_config = config.get("scheduler", {})
+    
+    # Extract gamma (lr_decay), defaulting to 1.0 if missing
+    gamma = scheduler_config.get("lr_decay", 1.0)
+    
+    return lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
 
 def get_loss(loss_config, trainpath, device):
     gamma = loss_config["gamma"]
