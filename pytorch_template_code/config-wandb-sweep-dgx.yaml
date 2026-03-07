@@ -1,7 +1,7 @@
 #This config is used to test several values 
 
 program: main.py
-name: discoditto  
+name: chad  
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
@@ -20,7 +20,7 @@ parameters:
   data.batch_size:
     value: 256
   data.num_workers:
-    value: 4
+    value: 16
   data.valid_ratio:
     value: 0.2
   data.is_batch_weighted:
@@ -31,38 +31,32 @@ parameters:
     value : AdamW
   optim.params.lr:
       distribution: log_uniform_values
-      max: 0.1 
+      max: 0.001 
       min : 0.00001
   optim.params.weight_decay:
       distribution: log_uniform_values
-      max: 0.5 
+      max: 0.01 
       min : 0.0001
   optim.params.amsgrad:
     values: [True, False]
 
     
   loss.lossname:
-    value: "FocalLoss"
+    value: "CrossEntropyLoss"
   loss.is_weighted:
-    value: False
+    values: [False,True]
   loss.is_article_weighted:
-    value: True 
-  loss.gamma:
+    values: [True,False] 
+  
+  scheduler.lr_decay:
     distribution: uniform
-    max: 5
-    min: 1
-  
+    max: 1.0 
+    min : 0.97
 
-
-  
   train.nepochs: 
     value: 10
-  train.is_weighted:
-    values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
     value: False
-  train.nepochs: 
-    value: 10
 
   
   logging.logdir:
@@ -73,20 +67,13 @@ parameters:
 
   
   model.class:
-    value: PollenNet
-  model.num_layers:
-    values: [3,4,5] 
-  model.size_linear :
-    values: [256,512,1024]
-  model.prob_droupout:
-    min: 0.0 
-    max : 0.99
-  #model.pretrained_path:
-  #  value: 'mobilenetv2_100'
-  #model.pretrained_in_color:
-  #  value: True 
-  #model.freeze_pretrained:
-  #  value: False
+    value: PlanktonClassifier
+  model.pretrained_path:
+    values: ['mobilenetv2_100','mobilenetv2_140','efficientnet_b3.ra2_in1k']
+  model.pretrained_in_color:
+    value: True 
+  model.freeze_pretrained:
+    value: False
   #old_model_path : /raid/home/memconflictsllm/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs/PollenNet_4/best_model.pt #if not None, the parameters are going to be ignored
 
 

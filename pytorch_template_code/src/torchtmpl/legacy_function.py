@@ -224,3 +224,77 @@ def train(config):
 """
 old optim.py
 """
+
+"""
+old testing logic without ensemble
+"""
+    
+@torch.no_grad()
+def test(config, send_kaggle_bool=True, tmp_testpath=None):
+    """
+    Evaluates the model and generates a CSV for Kaggle submission.
+    """
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda") if use_cuda else torch.device("cpu")
+    print(f"Device used: {device}")
+    print("Yay on utilise la nouvelle fonction de test !")
+
+    model_name = config["model"]["class"]
+    model_path_list = config["test"]["model_path"]
+    model_config = config["model"]
+    
+    if "pretrained_path" in model_config and model_config["pretrained_path"]:
+        csv_base_name = model_config["pretrained_path"].replace("/", "_").replace(":", "_")
+    else:
+        csv_base_name = model_name
+
+    # Properly expand the shell variables
+    save_dir = os.path.expandvars(config["test"]["save_dir"])
+    
+    # Optional performance fix: Load the test data ONCE outside the loop 
+    # since it doesn't change between model evaluations.
+    test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda, tmp_testpath=tmp_testpath)
+    
+    for model_path in model_path_list:
+        print(f"We are currently testing the model at {model_path}")
+        unique_save_path = utils.generate_unique_csv(save_dir, csv_base_name)
+        print(f"Unique save path is {unique_save_path}")
+        
+        if "pretrained_path" in model_config and model_config["pretrained_path"]:
+            # Dynamically fetch the class from the correct module
+            actual_model_class = getattr(models.pretrained_models, model_name)
+            model = actual_model_class(
+                pretrained_path=model_config["pretrained_path"],
+                pretrained=False, 
+                num_classes=num_classes, 
+            )
+        else:
+            # Dynamically fetch the class for custom CNNs
+            actual_model_class = getattr(models.cnn_models, model_name)
+            model = actual_model_class(model_config, input_size, num_classes)
+
+        # Removed the eval() line entirely.
+
+        # Load weights and push to device
+        model.load_state_dict(torch.load(model_path, weights_only=True))
+        model.to(device)
+        model.eval()
+
+        with open(unique_save_path, "w") as file:
+            print(f"Fichier créé à l'adresse : {unique_save_path}")
+            file.write("imgname,label\n")
+            
+            for img, filenames in test_loader:
+                img = img.to(device)
+                logits = model(img)
+                preds = torch.argmax(logits, dim=1) 
+                
+                for pred, filename in zip(preds, filenames):
+                    file.write(f"{filename},{pred.item()}\n")
+                    
+        print(f"Fin du test pour {model_path}.")
+        
+        if send_kaggle_bool:
+            send_kaggle(unique_save_path)
+            
+    return None
