@@ -8,6 +8,8 @@ import pathlib
 import subprocess 
 import datetime 
 from functools import partial
+from collections import defaultdict
+
 
 # External imports
 import yaml
@@ -15,6 +17,7 @@ import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
 from torchvision import transforms
+import torch.nn.functional as F
 import tqdm
 import time
 import timm
@@ -311,75 +314,172 @@ def send_kaggle(filepath):
     subprocess.run(f"uv run kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
     print("fichier envoyé !")
     
-@torch.no_grad()
-def test(config, send_kaggle_bool=True, tmp_testpath=None):
-    """
-    Evaluates the model and generates a CSV for Kaggle submission.
-    """
-    use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda") if use_cuda else torch.device("cpu")
-    print(f"Device used: {device}")
-    print("Yay on utilise la nouvelle fonction de test !")
 
+
+def apply_tta(model, img_batch, tta_operations):
+    """
+    Applies a list of TTA operations, runs the model, and averages the probabilities.
+    Memory-efficient version using a running sum accumulator.
+    """
+    prob_sum = None
+    num_ops = len(tta_operations)
+    
+    for op in tta_operations:
+        if op == 'identity':
+            x = img_batch
+        elif op == 'hflip':
+            x = torch.flip(img_batch, dims=[3])
+        elif op == 'vflip':
+            x = torch.flip(img_batch, dims=[2])
+        elif op == 'rot90':
+            x = torch.rot90(img_batch, k=1, dims=[2, 3])
+        else:
+            raise ValueError(f"Unknown TTA operation: {op}")
+            
+        # Forward pass and immediate softmax
+        logits = model(x)
+        probs = F.softmax(logits, dim=1)
+        
+        # Accumulate
+        if prob_sum is None:
+            prob_sum = probs
+        else:
+            prob_sum += probs
+            
+    # Average the accumulated probabilities
+    avg_probs = prob_sum / num_ops
+    return avg_probs
+
+
+@torch.no_grad()
+def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=None):
+    """
+    Loads a single model from its specific config, runs TTA inference, 
+    and returns a dictionary of filename -> probability tensor.
+    """
+    device = torch.device("cuda" if use_cuda else "cpu")
+    
+    # 1. Load the specific model's configuration
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+        
     model_name = config["model"]["class"]
-    model_path_list = config["test"]["model_path"]
     model_config = config["model"]
     
+    # Extract TTA instructions, default to 'identity' if missing
+    test_config = config.get("test", {})
+    tta_operations = test_config.get("tta_transforms", ["identity"])
+    print(f"  - Using TTA operations: {tta_operations}")
+    
+    # 2. Build the dataloader specific to this model's transforms
+    test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath
+    )
+    
+    # 3. Instantiate and load the model
     if "pretrained_path" in model_config and model_config["pretrained_path"]:
-        csv_base_name = model_config["pretrained_path"].replace("/", "_").replace(":", "_")
+        actual_model_class = getattr(models.pretrained_models, model_name)
+        model = actual_model_class(
+            pretrained_path=model_config["pretrained_path"],
+            pretrained=False, 
+            num_classes=num_classes, 
+        )
     else:
-        csv_base_name = model_name
+        actual_model_class = getattr(models.cnn_models, model_name)
+        model = actual_model_class(model_config, input_size, num_classes)
 
-    # Properly expand the shell variables
-    save_dir = os.path.expandvars(config["test"]["save_dir"])
-    
-    # Optional performance fix: Load the test data ONCE outside the loop 
-    # since it doesn't change between model evaluations.
-    test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda, tmp_testpath=tmp_testpath)
-    
-    for model_path in model_path_list:
-        print(f"We are currently testing the model at {model_path}")
-        unique_save_path = utils.generate_unique_csv(save_dir, csv_base_name)
-        print(f"Unique save path is {unique_save_path}")
+    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.to(device)
+    model.eval()
+
+    # 4. Extract Probabilities
+    img_probs = {}
+    for img, filenames in test_loader:
+        img = img.to(device)
+        batch_probs = apply_tta(model, img, tta_operations)
         
-        if "pretrained_path" in model_config and model_config["pretrained_path"]:
-            # Dynamically fetch the class from the correct module
-            actual_model_class = getattr(models.pretrained_models, model_name)
-            model = actual_model_class(
-                pretrained_path=model_config["pretrained_path"],
-                pretrained=False, 
-                num_classes=num_classes, 
-            )
-        else:
-            # Dynamically fetch the class for custom CNNs
-            actual_model_class = getattr(models.cnn_models, model_name)
-            model = actual_model_class(model_config, input_size, num_classes)
-
-        # Removed the eval() line entirely.
-
-        # Load weights and push to device
-        model.load_state_dict(torch.load(model_path, weights_only=True))
-        model.to(device)
-        model.eval()
-
-        with open(unique_save_path, "w") as file:
-            print(f"Fichier créé à l'adresse : {unique_save_path}")
-            file.write("imgname,label\n")
+        for prob, filename in zip(batch_probs, filenames):
+            # MUST move to CPU to prevent VRAM exhaustion
+            img_probs[filename] = prob.cpu() 
             
-            for img, filenames in test_loader:
-                img = img.to(device)
-                logits = model(img)
-                preds = torch.argmax(logits, dim=1) 
-                
-                for pred, filename in zip(preds, filenames):
-                    file.write(f"{filename},{pred.item()}\n")
-                    
-        print(f"Fin du test pour {model_path}.")
+    # Clean up GPU memory before the next model is loaded
+    del model
+    torch.cuda.empty_cache()
+    
+    return img_probs
+
+
+def test_ensemble(ensemble_yaml_path, send_kaggle_bool=True):
+    """
+    Orchestrates the ensemble testing by parsing parallel lists of weights and configs,
+    handling OS-level variable expansions for dynamic paths.
+    """
+    use_cuda = torch.cuda.is_available()
+    
+    with open(ensemble_yaml_path, "r") as f:
+        ensemble_config = yaml.safe_load(f)
         
-        if send_kaggle_bool:
-            send_kaggle(unique_save_path)
+    # Extract and expand top-level OS variables
+    raw_save_dir = ensemble_config.get("save_dir", "${JOB_WORKSPACE}/logs/ensemble")
+    save_dir = os.path.expandvars(raw_save_dir)
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Safely expand tmp_testpath if it exists in the yaml
+    raw_tmp_testpath = ensemble_config.get("tmp_testpath", None)
+    tmp_testpath = os.path.expandvars(raw_tmp_testpath) if raw_tmp_testpath else None
+        
+    # Extract the nested YAML structure
+    test_config = ensemble_config.get("test", {})
+    model_paths = test_config.get("model_path", [])
+    config_paths = test_config.get("model_config_path", [])
+    
+    # Critical Safety Check
+    if len(model_paths) != len(config_paths):
+        raise ValueError(f"Mismatch in ensemble config: found {len(model_paths)} model paths but {len(config_paths)} config paths.")
+    
+    # Pair them up
+    all_models = list(zip(model_paths, config_paths))
+    
+    if not all_models:
+        print("No models found in the ensemble configuration.")
+        return
+
+    print(f"Starting ensemble of {len(all_models)} models...")
+    print(f"Using test dataset at: {tmp_testpath}")
+    
+    ensemble_probs = defaultdict(list)
+    
+    # 1. Accumulate predictions
+    for model_path, config_path in all_models:
+        print(f"\nEvaluating: {model_path}")
+        # Pass the expanded tmp_testpath down to the extractor
+        probs_dict = extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath)
+        
+        for filename, prob in probs_dict.items():
+            ensemble_probs[filename].append(prob)
             
-    return None
+    # 2. Average and output
+    print("\nAveraging predictions and writing CSV...")
+    
+    unique_save_path = utils.generate_unique_csv(save_dir, "ensemble_submission")
+    
+    with open(unique_save_path, "w") as file:
+        file.write("imgname,label\n")
+        
+        for filename, probs_list in ensemble_probs.items():
+            # Stack the individual probability vectors: (num_models, num_classes)
+            stacked_probs = torch.stack(probs_list)
+            # Average across the models
+            mean_probs = torch.mean(stacked_probs, dim=0)
+            # Take the final highest probability class
+            final_pred = torch.argmax(mean_probs).item()
+            
+            file.write(f"{filename},{final_pred}\n")
+            
+    print(f"Ensemble evaluation complete. File saved to {unique_save_path}")
+    
+    if send_kaggle_bool:
+        send_kaggle(unique_save_path)
 
 def create_sweep(config):
     """
