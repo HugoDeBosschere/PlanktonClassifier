@@ -1,7 +1,7 @@
 #This config is used to test several values 
 
 program: main.py
-name: plusjamaisalco
+name: discoditto
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
@@ -45,10 +45,13 @@ parameters:
     value: "FocalLoss"
   loss.is_weighted:
     value: False
+  loss.is_article_weighted:
+    value: True 
   loss.gamma:
     distribution: uniform
     max: 5
     min: 1
+  
 
 
   
@@ -62,9 +65,10 @@ parameters:
     value: 10
 
   
-  logging:
-    logdir: ${JOB_WORKSPACE}/logs
-    save_dir: ${JOB_WORKSPACE}/test
+  logging.logdir:
+    value: ${JOB_WORKSPACE}/logs # Better to provide the fullpath, especially on the cluster
+  logging.save_dir:
+    value: ${JOB_WORKSPACE}/logs 
 
 
   

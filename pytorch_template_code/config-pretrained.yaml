@@ -27,17 +27,21 @@ parameters:
   optim.algo:
     value : AdamW
   optim.params.lr:
-    value : 0.00001
+    value : 0.004
   optim.params.weight_decay:
-    value: 0.01
+    value: 0.00
   optim.params.amsgrad:
-    value: True
+    value: False 
 
+  scheduler.lr_decay:
+    value: 0.99
     
   loss.lossname:
     value: "CrossEntropyLoss"
   loss.is_weighted:
     value: True
+  loss.is_article_weighted:
+    value: True 
   loss.gamma:
     value: 2
 
@@ -67,7 +71,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value: 'mobilenetv2_100' 
+    value: 'mobilenetv2_140'
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:

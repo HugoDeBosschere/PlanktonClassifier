@@ -47,14 +47,16 @@ rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycac
          --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv' \
          --exclude '.venv' . "$JOB_WORKSPACE/code"
 
+export JOB_WORKSPACE="/raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code"
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-export VECLIB_MAXIMUM_THREADS=1
-export NUMEXPR_NUM_THREADS=1
+#This is useful for using Elastic Transform. It may degrade or better performance
+#export OMP_NUM_THREADS=1
+#export MKL_NUM_THREADS=1
+#export OPENBLAS_NUM_THREADS=1
+#export VECLIB_MAXIMUM_THREADS=1
+#export NUMEXPR_NUM_THREADS=1
 
 echo "Copying the dataset to have faster access to the samples"
 # Assure-toi que ./dataset/ pointe bien vers /raid/home/... sur le noeud d'exécution
@@ -68,6 +70,14 @@ cat "$JOB_WORKSPACE/config.yaml"
 
 echo "Checking out the correct version of the code commit_id {commit_id}"
 cd "$JOB_WORKSPACE/code"
+
+# ... #SBATCH directives ...
+
+echo "=== CHECKING SHARED MEMORY LIMIT ==="
+df -h /dev/shm
+echo "===================================="
+
+python main.py --config config.yaml
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
