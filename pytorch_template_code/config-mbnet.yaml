@@ -1,0 +1,55 @@
+data:
+  trainpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/train'
+  testpath: '/mounts/datasets/datasets/2025-ZooCamChallenge/test'
+  batch_size: 128
+  num_workers: 8
+  valid_ratio: 0.2
+  is_batch_weighted : False #If True, The dataloader are initialized with a RandomWeightedSampler
+
+optim:
+  algo: AdamW
+  params:
+    lr: 2.124999366849727e-05
+    weight_decay: 0.017700182101226123
+
+loss:
+  lossname: "CrossEntropyLoss"
+  is_weighted: False 
+  gamma: 1.092705563750044
+
+train:
+  nepochs: 40
+  loss: "CrossEntropyLoss"
+  is_weighted: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+  test_end_train: True
+
+logging:
+  wandb: 
+    project: WinningKaggle
+    entity: hugo-debosschere-are-na
+  logdir: "/usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs"  # Better to provide the fullpath, especially on the cluster
+  save_dir : /usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test_CLIP
+# model:
+#   class: Linear
+model:
+  class: PlanktonMobileNet
+  num_layers: 5 
+  size_linear : 1024
+  prob_droupout : 0.28163534557606207
+  #pretrained_path: "hf_hub:Jookare/plankton_vit_large_patch16_224.mae"
+  #pretrained_in_color: True
+  #old_model_path : None #if not None, the parameters are going to be ignored
+                                                      #and the model in old_model_path will be loaded and improved
+
+clip:
+  # Zero-shot OpenCLIP configuration (used by `test_zero_shot_clip`)
+  model_name: "ViT-B-32"
+  pretrained: "laion2b_s34b_b79k"
+  template: "a photo of a {}"
+
+test:
+  model_path: ["best_model_from_pretrained.pth"]  # or your existing list
+  save_dir : /usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test_tta
+  tta: True
+
+#tmp_testpath: "./test"

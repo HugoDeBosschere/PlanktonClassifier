@@ -11,8 +11,8 @@ def makejob(commit_id, configpath, nruns):
 
 #SBATCH --job-name=pretrained
 #SBATCH --nodes=1
-#SBATCH --partition=gpu_prod_long
-#SBATCH --time=48:00:00
+#SBATCH --partition=gpu_prod_night
+#SBATCH --time=2:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --exclude=sh[00,01,05,03,09,10-19,20-22,08]   

@@ -176,7 +176,7 @@ class TestDataset(datasets.ImageFolder):
         
         return image, filename
 
-def get_test_dataloaders(config, use_cuda, tmp_testpath=None): 
+def get_test_dataloaders(config, use_cuda, tmp_testpath=None, transform=None): 
 
     data_config = config['data']
     batch_size = data_config['batch_size']
@@ -189,15 +189,17 @@ def get_test_dataloaders(config, use_cuda, tmp_testpath=None):
         
     batch_size = data_config["batch_size"]
 
-    
-
-    input_transform = transforms.Compose(
-        [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
-    )
+    # Allow overriding the default transform (e.g. for CLIP preprocess)
+    if transform is None:
+        input_transform = transforms.Compose(
+            [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+        )
+    else:
+        input_transform = transform
 
     test_dataset = TestDataset(
         root=test_path,
-        transform = input_transform
+        transform=input_transform
     )
 
     

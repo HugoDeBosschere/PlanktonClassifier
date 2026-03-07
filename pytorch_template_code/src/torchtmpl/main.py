@@ -5,8 +5,8 @@ import logging
 import sys
 import os
 import pathlib
-import subprocess # To be able to send the results directly to kaggle 
-import datetime # To enrich the log files and now when the training was launched
+import subprocess  # To be able to send the results directly to kaggle 
+import datetime  # To enrich the log files and now when the training was launched
 import sys
 from functools import partial
 
@@ -15,14 +15,17 @@ import yaml
 import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
-from torchvision import transforms
+from torchvision import transforms, datasets
+from torchvision.transforms import functional as F
+import math
 import tqdm
 import time
 import timm
 from timm.data import resolve_data_config
-from timm.data.transforms_factory import create_transform #To import pre-trained models, even models already trained at recognizing plankton  
-import PIL #for image pre-processing. I think it's useless but I do want to break the code
-from PIL import Image #Same
+from timm.data.transforms_factory import create_transform  # To import pre-trained models, even models already trained at recognizing plankton  
+import PIL  # for image pre-processing. I think it's useless but I do want to break the code
+from PIL import Image  # Same
+import open_clip
 
 # Local imports
 from . import data
@@ -478,6 +481,16 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
     print(f"Device used {device}")
     print("Yay on utilise la nouvelle fonction de test !")
 
+    # ------------------------------------------------------------------
+    # Optional Test-Time Augmentation (TTA)
+    # ------------------------------------------------------------------
+    test_cfg = config.get("test", {}) if isinstance(config, dict) else {}
+    use_tta = bool(test_cfg.get("tta", False))
+    if use_tta:
+        print("Test-time augmentation (TTA) is ENABLED (using flips).")
+    else:
+        print("Test-time augmentation (TTA) is DISABLED.")
+
     model_name = config["model"]["class"]
     model_path_list = config["test"]["model_path"]
     for model_path in model_path_list:
@@ -485,12 +498,14 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
         save_dir = config["test"]["save_dir"]
         unique_save_path = utils.generate_unique_csv(save_dir,model_name)
         print(f"unique save path is {unique_save_path}")
-        test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda,tmp_testpath=tmp_testpath)
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+            config, use_cuda, tmp_testpath=tmp_testpath
+        )
         
         model_config = config["model"]
 
         model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
-        model.load_state_dict(torch.load(model_path, weights_only=True))
+        model.load_state_dict(torch.load(model_path, weights_only=False))
         model.to(device)
 
         with open(unique_save_path,"w") as file:
@@ -500,8 +515,54 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
             file.write("imgname,label \n")
             for img, filenames in test_loader:
                 img = img.to(device)
-                logits = model(img)
-                preds = torch.argmax(logits,dim=1) 
+
+                # ----------------------------------------------------------
+                # Forward pass with optional TTA
+                # ----------------------------------------------------------
+                if use_tta:
+                    logits_list = []
+                    
+                    # Original
+                    logits_list.append(model(img))
+                    
+                    # Horizontal flip
+                    logits_list.append(model(torch.flip(img, dims=[3])))
+
+                    # Vertical flip
+                    logits_list.append(model(torch.flip(img, dims=[2])))
+                    # Rotations: ±15°, ±30°
+                    # for angle in [15, -15, 30, -30]:
+                    #     img_rotated = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR, fill=0)
+                    #     logits_list.append(model(img_rotated))
+                    
+                    # Translations: small shifts in x and y directions
+                    # Translation parameters: (tx, ty) in pixels
+                    # For 128x128 images, translate by ~5% (6 pixels)
+                    translate_x, translate_y = 6, 6
+                    # for tx, ty in [(translate_x, 0), (-translate_x, 0), (0, translate_y), (0, -translate_y)]:
+                    #     # Convert pixel translation to affine matrix parameters
+                    #     # affine matrix: [[1, 0, tx], [0, 1, ty]]
+                    #     img_translated = F.affine(
+                    #         img, angle=0, translate=(tx, ty), scale=1.0, 
+                    #         shear=0, interpolation=F.InterpolationMode.BILINEAR, fill=0
+                    #     )
+                    #     logits_list.append(model(img_translated))
+                    
+                    # Shear: small shearing transformations
+                    # Shear angles in degrees
+                    # for shear_x, shear_y in [(5, 0), (-5, 0), (0, 5), (0, -5)]:
+                    #     img_sheared = F.affine(
+                    #         img, angle=0, translate=(0, 0), scale=1.0,
+                    #         shear=(shear_x, shear_y), interpolation=F.InterpolationMode.BILINEAR, fill=0
+                    #     )
+                    #     logits_list.append(model(img_sheared))
+                    
+                    # Average logits over all augmented versions
+                    logits = torch.stack(logits_list, dim=0).mean(dim=0)
+                else:
+                    logits = model(img)
+
+                preds = torch.argmax(logits, dim=1)
                 for pred, filename in zip(preds,filenames):
                     file.write(f"{filename}, {pred.item()} \n")
                     print(filename)
@@ -509,6 +570,205 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
         print("Fin du test.")
         if send_kaggle_bool:
             send_kaggle(unique_save_path)
+    return None
+
+
+@torch.no_grad()
+def test_zero_shot_clip(config, send_kaggle_bool=True, tmp_testpath=None, tmp_trainpath=None):
+    """
+    Zero-shot classification using OpenCLIP LAION models:
+    - Convert each class name -> text embedding
+    - Convert each test image -> image embedding
+    - Compare cosine similarity and pick the highest score
+    """
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda") if use_cuda else torch.device("cpu")
+    print(f"Device used {device}")
+    print("Running zero-shot classification with OpenCLIP")
+
+    # ------------------------------------------------------------------
+    # 1. Load CLIP model & preprocess from config
+    # ------------------------------------------------------------------
+    clip_cfg = config.get("clip", {})
+    model_name = clip_cfg.get("model_name", "ViT-B-32")
+    pretrained = clip_cfg.get("pretrained", "laion2b_s34b_b79k")
+    template = clip_cfg.get("template", "a photo of a {}")
+
+    print(f"Loading OpenCLIP model '{model_name}' with weights '{pretrained}'")
+    clip_model, preprocess, _ = open_clip.create_model_and_transforms(
+        model_name, pretrained=pretrained
+    )
+    tokenizer = open_clip.get_tokenizer(model_name)
+    clip_model.to(device)
+    clip_model.eval()
+
+    # ------------------------------------------------------------------
+    # 2. Build the list of class names from the training folder
+    # ------------------------------------------------------------------
+    data_config = config["data"]
+    if tmp_trainpath:
+        trainpath = tmp_trainpath
+    else:
+        trainpath = data_config["trainpath"]
+
+    print(f"Loading class names from '{trainpath}'")
+    base_dataset = datasets.ImageFolder(root=trainpath)
+    raw_classes = base_dataset.classes  # e.g. ['class_a', 'class_b', ...]
+
+    # Turn folder names into more natural language prompts
+    classnames = [template.format(c.replace("_", " ")) for c in raw_classes]
+    print(f"Number of classes for zero-shot: {len(classnames)}")
+
+    text_tokens = tokenizer(classnames).to(device)
+    text_features = clip_model.encode_text(text_tokens)
+    text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+
+    # ------------------------------------------------------------------
+    # 3. Build the test dataloader using CLIP's preprocess
+    # ------------------------------------------------------------------
+    test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath, transform=preprocess
+    )
+
+    # ------------------------------------------------------------------
+    # 4. Run zero-shot prediction and write Kaggle CSV
+    # ------------------------------------------------------------------
+    model_name_for_log = clip_cfg.get("save_name", f"{model_name}_{pretrained}")
+    save_dir = config["logging"]["save_dir"]
+    unique_save_path = utils.generate_unique_csv(save_dir, model_name_for_log)
+    print(f"Saving zero-shot predictions to: {unique_save_path}")
+
+    with open(unique_save_path, "w") as file:
+        clip_model.eval()
+        file.write("imgname,label \n")
+
+        for imgs, filenames in test_loader:
+            imgs = imgs.to(device)
+
+            image_features = clip_model.encode_image(imgs)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+            # Similarity scores (scaled like original CLIP implementation)
+            logits = 100.0 * image_features @ text_features.T
+            preds = torch.argmax(logits, dim=1)
+
+            for pred, filename in zip(preds, filenames):
+                file.write(f"{filename}, {pred.item()} \n")
+
+    print("Zero-shot CLIP inference finished.")
+    if send_kaggle_bool:
+        send_kaggle(unique_save_path)
+
+    return None
+
+
+@torch.no_grad()
+def test_supervised_clip(config, send_kaggle_bool=False, tmp_testpath=None, tmp_trainpath=None):
+    """
+    Supervised CLIP classification using training-image prototypes:
+    - Encode each training image with CLIP
+    - Build one prototype per class (mean embedding)
+    - For each test image, encode with CLIP and pick the class with highest cosine similarity
+    """
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda") if use_cuda else torch.device("cpu")
+    print(f"Device used {device}")
+    print("Running supervised prototype-based classification with OpenCLIP")
+
+    # ------------------------------------------------------------------
+    # 1. Load CLIP model & preprocess from config
+    # ------------------------------------------------------------------
+    clip_cfg = config.get("clip", {})
+    model_name = clip_cfg.get("model_name", "ViT-B-32")
+    pretrained = clip_cfg.get("pretrained", "laion2b_s34b_b79k")
+
+    print(f"Loading OpenCLIP model '{model_name}' with weights '{pretrained}'")
+    clip_model, preprocess, _ = open_clip.create_model_and_transforms(
+        model_name, pretrained=pretrained
+    )
+    clip_model.to(device)
+    clip_model.eval()
+
+    data_config = config["data"]
+    if tmp_trainpath:
+        trainpath = tmp_trainpath
+    else:
+        trainpath = data_config["trainpath"]
+
+    print(f"Building training dataset from '{trainpath}' for CLIP prototypes")
+    train_dataset = datasets.ImageFolder(root=trainpath, transform=preprocess)
+    num_classes = len(train_dataset.classes)
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=data_config["batch_size"],
+        shuffle=False,
+        num_workers=data_config["num_workers"],
+        pin_memory=use_cuda,
+    )
+
+    # ------------------------------------------------------------------
+    # 2. Compute class prototypes (mean normalized embedding per class)
+    # ------------------------------------------------------------------
+    prototypes = None
+    counts = torch.zeros(num_classes, dtype=torch.long, device=device)
+
+    for imgs, labels in train_loader:
+        imgs = imgs.to(device)
+        labels = labels.to(device)
+
+        feats = clip_model.encode_image(imgs)
+        feats = feats / feats.norm(dim=-1, keepdim=True)
+
+        if prototypes is None:
+            prototypes = torch.zeros(num_classes, feats.size(-1), device=device)
+
+        for c in labels.unique():
+            mask = labels == c
+            if mask.any():
+                prototypes[c] += feats[mask].sum(dim=0)
+                counts[c] += mask.sum()
+
+    # Avoid division by zero; classes without samples keep zero prototype
+    counts_safe = counts.clamp(min=1).unsqueeze(-1)
+    prototypes = prototypes / counts_safe
+    prototypes = prototypes / prototypes.norm(dim=-1, keepdim=True)
+
+    # ------------------------------------------------------------------
+    # 3. Build the test dataloader using CLIP's preprocess
+    # ------------------------------------------------------------------
+    test_loader, input_size, _ = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath, transform=preprocess
+    )
+
+    # ------------------------------------------------------------------
+    # 4. Run prototype-based prediction and write Kaggle CSV
+    # ------------------------------------------------------------------
+    model_name_for_log = clip_cfg.get("save_name", f"{model_name}_{pretrained}_supervised")
+    save_dir = config["logging"]["save_dir"]
+    unique_save_path = utils.generate_unique_csv(save_dir, model_name_for_log)
+    print(f"Saving supervised CLIP predictions to: {unique_save_path}")
+
+    with open(unique_save_path, "w") as file:
+        clip_model.eval()
+        file.write("imgname,label \n")
+
+        for imgs, filenames in test_loader:
+            imgs = imgs.to(device)
+
+            image_features = clip_model.encode_image(imgs)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+
+            logits = 100.0 * image_features @ prototypes.T
+            preds = torch.argmax(logits, dim=1)
+
+            for pred, filename in zip(preds, filenames):
+                file.write(f"{filename}, {pred.item()} \n")
+
+    print("Supervised CLIP prototype inference finished.")
+    if send_kaggle_bool:
+        send_kaggle(unique_save_path)
+
     return None
 
 def create_sweep(sweep_config):

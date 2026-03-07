@@ -8,6 +8,9 @@ import operator
 import torch
 import torch.nn as nn
 
+# Local imports
+from .pretrained_models import PlanktonMobileNet as PlanktonMobileNetClass
+
 
 def conv_relu_bn(cin, cout):
     return [
@@ -161,3 +164,6 @@ def dummydumdum(cfg, input_size,num_classes):
     out_layers.append(nn.Linear(num_features, num_classes))
 
     return nn.Sequential(conv_model,*out_layers)
+
+
+
