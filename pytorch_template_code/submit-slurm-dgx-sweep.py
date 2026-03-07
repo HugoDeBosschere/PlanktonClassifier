@@ -32,6 +32,7 @@ date
 mkdir $TMPDIR/code
 rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
 
+export JOB_WORKSPACE="/raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code"
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 

@@ -34,7 +34,7 @@ parameters:
     value: False 
 
   scheduler.lr_decay:
-    value: 0.97
+    value: 0.99
     
   loss.lossname:
     value: "CrossEntropyLoss"
