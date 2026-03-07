@@ -371,10 +371,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
     tta_operations = test_config.get("tta_transforms", ["identity"])
     print(f"  - Using TTA operations: {tta_operations}")
     
-    # 2. Build the dataloader specific to this model's transforms
-    test_loader, input_size, num_classes = data.get_test_dataloaders(
-        config, use_cuda, tmp_testpath=tmp_testpath
-    )
+    num_classes = 86
     
     # 3. Instantiate and load the model
     if "pretrained_path" in model_config and model_config["pretrained_path"]:
@@ -384,13 +381,35 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
             pretrained=False, 
             num_classes=num_classes, 
         )
+
+        data_cfg = resolve_data_config(model.pretrained_cfg, model=model.get_backbone())
+        valid_transform = create_transform(**data_cfg, is_training=False)
+        if model_config["pretrained_in_color"]:
+            to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))
+            valid_transform.transforms.insert(0, to_rgb)
+        
+        #test loader with valid transforms 
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath, input_transform = valid_transform
+        )
+
     else:
         actual_model_class = getattr(models.cnn_models, model_name)
         model = actual_model_class(model_config, input_size, num_classes)
 
+        #test loader without valid transforms
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath
+        )
+
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.to(device)
     model.eval()
+
+    # 2. Build the dataloader specific to this model's transforms
+    test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath
+    )
 
     # 4. Extract Probabilities
     img_probs = {}

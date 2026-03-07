@@ -238,7 +238,7 @@ class TestDataset(datasets.ImageFolder):
         
         return image, filename
 
-def get_test_dataloaders(config, use_cuda, tmp_testpath=None): 
+def get_test_dataloaders(config, use_cuda, input_transform = None, tmp_testpath=None): 
 
     data_config = config['data']
     batch_size = data_config['batch_size']
@@ -251,11 +251,10 @@ def get_test_dataloaders(config, use_cuda, tmp_testpath=None):
         
     batch_size = data_config["batch_size"]
 
-    
-
-    input_transform = transforms.Compose(
-        [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
-    )
+    if not input_transform:
+        input_transform = transforms.Compose(
+            [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+        )
 
     test_dataset = TestDataset(
         root=test_path,
