@@ -36,14 +36,14 @@ export NUMEXPR_NUM_THREADS=1
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp21yozr2k-config.yml> $TMPDIR/config.yaml
+envsubst </raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpkpbmkyfi-config.yml> $TMPDIR/config.yaml
 
 echo "Verifying that the right configuration has been generated" 
 cat $TMPDIR/config.yaml
 
-echo "Checking out the correct version of the code commit_id 38d9704ee2130b4dcf09148ae50df020ea7c5c49"
+echo "Checking out the correct version of the code commit_id 2f452b654fbc5979ab0a10aa7640c934d287809b"
 cd $TMPDIR/code
-git checkout 38d9704ee2130b4dcf09148ae50df020ea7c5c49
+git checkout 2f452b654fbc5979ab0a10aa7640c934d287809b
 
 echo "Setting up the virtual environment"
 python3 -m venv venv

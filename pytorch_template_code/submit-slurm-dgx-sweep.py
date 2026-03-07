@@ -19,23 +19,37 @@ def makejob(commit_id, configpath, nruns, func):
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --array=1-{nruns}
 
-
 current_dir=`pwd`
 export PATH=$PATH:~/.local/bin
-export HF_TOKEN=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 #
+export HF_TOKEN=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 # Attention à ne pas commit ce token en clair en production
 echo "Session " ${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}
 
 echo "Running on " $(hostname)
 
+# 1. Définition d'un espace de travail unique pour éviter les collisions entre jobs/tasks
+JOB_WORKSPACE="$TMPDIR/$USER/job_${{SLURM_ARRAY_JOB_ID}}_task_${{SLURM_ARRAY_TASK_ID}}"
+
+# 2. Nettoyage automatique à la fin du script (succès ou échec)
+trap 'echo "Cleaning up workspace..."; rm -rf "$JOB_WORKSPACE"' EXIT
+
+echo "Creating workspace at $JOB_WORKSPACE"
+mkdir -p "$JOB_WORKSPACE/code"
+mkdir -p "$JOB_WORKSPACE/dataset"
+
+# Isolation des dossiers WandB pour les sweeps
+export WANDB_DIR="$JOB_WORKSPACE/wandb"
+mkdir -p "$WANDB_DIR"
+
 echo "Copying the source directory and data"
 date
-mkdir $TMPDIR/code
-rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
+# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv) et de git
+rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' \
+         --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv' \
+         --exclude '.venv' --exclude '.git' . "$JOB_WORKSPACE/code"
 
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-#This is useful for using Elastic Transform. It may degrade or better performance
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
@@ -43,15 +57,17 @@ export VECLIB_MAXIMUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 echo "Copying the dataset to have faster access to the samples"
-mkdir $TMPDIR/dataset
-rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst <{configpath}> $TMPDIR/config.yaml
+# Assure-toi que ~/dataset/ pointe bien vers /raid/home/... sur le noeud d'exécution
+rsync -aph --info=progress2 ~/dataset/ "$JOB_WORKSPACE/dataset/"
+
+# 4. Génération de la configuration dans l'espace isolé
+envsubst < "{configpath}" > "$JOB_WORKSPACE/config.yaml"
 
 echo "Verifying that the right configuration has been generated" 
-cat $TMPDIR/config.yaml
+cat "$JOB_WORKSPACE/config.yaml"
 
 echo "Checking out the correct version of the code commit_id {commit_id}"
-cd $TMPDIR/code
+cd "$JOB_WORKSPACE/code"
 git checkout {commit_id}
 
 echo "Setting up the virtual environment"
@@ -62,7 +78,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml {func}
+python -m torchtmpl.main "$JOB_WORKSPACE/config.yaml" {func}
 
 if [[ $? != 0 ]]; then
     exit -1
@@ -77,8 +93,6 @@ def submit_job(job):
 
 
 # Ensure all the modified files have been staged and commited
-# This is to guarantee that the commit id is a reliable certificate
-# of the version of the code you want to evaluate
 result = int(
     subprocess.run(
         "expr $(git diff --name-only | wc -l) + $(git diff --name-only --cached | wc -l)",
@@ -94,14 +108,14 @@ if result > 0:
 
 commit_id = subprocess.check_output(
     "git log --pretty=format:'%H' -n 1", shell=True
-).decode()
+).decode().strip() # Ajout d'un .strip() pour éviter les retours à la ligne parasites
 
 print(f"I will be using the commit id {commit_id}")
 
 # Ensure the log directory exists
 os.system("mkdir -p logslurms")
 
-if len(sys.argv) not in [2, 3,4]:
+if len(sys.argv) not in [2, 3, 4]:
     print(f"Usage : {sys.argv[0]} config.yaml <nruns|1>")
     sys.exit(-1)
 
@@ -122,4 +136,4 @@ tmp_configfilepath = tempfile.mkstemp(dir="./configs", suffix="-config.yml")[1]
 os.system(f"cp {configpath} {tmp_configfilepath}")
 
 # Launch the batch jobs
-submit_job(makejob(commit_id, tmp_configfilepath, nruns,func))
+submit_job(makejob(commit_id, tmp_configfilepath, nruns, func))
