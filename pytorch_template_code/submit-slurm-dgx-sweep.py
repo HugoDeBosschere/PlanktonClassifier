@@ -42,10 +42,10 @@ mkdir -p "$WANDB_DIR"
 
 echo "Copying the source directory and data"
 date
-# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv) et de git
+# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv)
 rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' \
          --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv' \
-         --exclude '.venv' --exclude '.git' . "$JOB_WORKSPACE/code"
+         --exclude '.venv' . "$JOB_WORKSPACE/code"
 
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 

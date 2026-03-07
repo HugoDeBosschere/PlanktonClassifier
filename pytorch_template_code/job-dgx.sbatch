@@ -50,14 +50,14 @@ echo "Copying the dataset to have faster access to the samples"
 rsync -aph --info=progress2 ~/dataset/ "$JOB_WORKSPACE/dataset/"
 
 # 4. Génération de la configuration dans l'espace isolé
-envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmps8rqk6kp-config.yml" > "$JOB_WORKSPACE/config.yaml"
+envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmptm2kdwdp-config.yml" > "$JOB_WORKSPACE/config.yaml"
 
 echo "Verifying that the right configuration has been generated" 
 cat "$JOB_WORKSPACE/config.yaml"
 
-echo "Checking out the correct version of the code commit_id 109285391c070694fe26fb216111405450d61c9f"
+echo "Checking out the correct version of the code commit_id ab8359f38f4045bdb81174918c4d6d5bf3a4d7a8"
 cd "$JOB_WORKSPACE/code"
-git checkout 109285391c070694fe26fb216111405450d61c9f
+git checkout ab8359f38f4045bdb81174918c4d6d5bf3a4d7a8
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
