@@ -33,8 +33,8 @@ mkdir -p "$WANDB_DIR"
 
 echo "Copying the source directory and data"
 date
-# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv) et de git
-rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__'          --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv'          --exclude '.venv' --exclude '.git' . "$JOB_WORKSPACE/code"
+# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv)
+rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__'          --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv'          --exclude '.venv' . "$JOB_WORKSPACE/code"
 
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
@@ -50,14 +50,14 @@ echo "Copying the dataset to have faster access to the samples"
 rsync -aph --info=progress2 ~/dataset/ "$JOB_WORKSPACE/dataset/"
 
 # 4. Génération de la configuration dans l'espace isolé
-envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmptm2kdwdp-config.yml" > "$JOB_WORKSPACE/config.yaml"
+envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp1b13b4fl-config.yml" > "$JOB_WORKSPACE/config.yaml"
 
 echo "Verifying that the right configuration has been generated" 
 cat "$JOB_WORKSPACE/config.yaml"
 
-echo "Checking out the correct version of the code commit_id ab8359f38f4045bdb81174918c4d6d5bf3a4d7a8"
+echo "Checking out the correct version of the code commit_id 1d686af38c639e0845859d6b23e7b9a102636100"
 cd "$JOB_WORKSPACE/code"
-git checkout ab8359f38f4045bdb81174918c4d6d5bf3a4d7a8
+git checkout 1d686af38c639e0845859d6b23e7b9a102636100
 
 echo "Setting up the virtual environment"
 python3 -m venv venv

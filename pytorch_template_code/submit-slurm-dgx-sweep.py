@@ -57,8 +57,8 @@ export VECLIB_MAXIMUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 echo "Copying the dataset to have faster access to the samples"
-# Assure-toi que ~/dataset/ pointe bien vers /raid/home/... sur le noeud d'exécution
-rsync -aph --info=progress2 ~/dataset/ "$JOB_WORKSPACE/dataset/"
+# Assure-toi que ./dataset/ pointe bien vers /raid/home/... sur le noeud d'exécution
+rsync -aph --info=progress2 ./dataset/ "$JOB_WORKSPACE/dataset/"
 
 # 4. Génération de la configuration dans l'espace isolé
 envsubst < "{configpath}" > "$JOB_WORKSPACE/config.yaml"
