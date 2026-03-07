@@ -45,10 +45,13 @@ parameters:
     value: "FocalLoss"
   loss.is_weighted:
     value: False
+  loss.is_article_weighted:
+    value: True 
   loss.gamma:
     distribution: uniform
     max: 5
     min: 1
+  
 
 
   

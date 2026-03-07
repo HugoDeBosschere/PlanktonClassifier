@@ -40,6 +40,8 @@ parameters:
     value: "CrossEntropyLoss"
   loss.is_weighted:
     value: True
+  loss.is_article_weighted:
+    value: True 
   loss.gamma:
     value: 2
 

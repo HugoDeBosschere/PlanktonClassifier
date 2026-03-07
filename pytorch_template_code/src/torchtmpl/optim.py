@@ -24,17 +24,38 @@ def get_loss(loss_config, trainpath, device):
     lossname = loss_config["lossname"]
     return eval(f"nn.{lossname}()")
 
-def get_weighted_loss(lossname, class_counts, device):
+def get_weighted_loss(lossname, class_counts, device, is_article_weighted=True):
     print(f"nombre de sample pour chaque classe : {class_counts}")
-    weights_per_classes = 1.0 / class_counts.float()
+    
+    # Ensure we are working with floats for division
+    counts = class_counts.float()
+    
+    if is_article_weighted:
+        print("We are using an article weighted loss")
+        # Applying the article's fractional scaling logic directly via PyTorch operations
+        counts = torch.clamp(counts, min=1.0) # Prevents division by zero (equivalent to np.maximum)
+        max_count = torch.max(counts)
+        weights_per_classes = (max_count / counts) ** 0.25
+    else:
+        # Original inverse frequency logic
+        weights_per_classes = 1.0 / counts
+        
     weights_tensor = weights_per_classes.to(device)
     
     if hasattr(nn, lossname):
-        loss = getattr(nn, lossname)
+        loss_class = getattr(nn, lossname)
         # Instantiate: loss_class(weight=weights_tensor)
-        return loss(weight=weights_tensor)
+        return loss_class(weight=weights_tensor)
     else:
         raise ValueError(f"Loss {lossname} not found in torch.nn")
+
+def compute_class_weights(dataset):
+    targets = dataset.targets
+    counts = np.bincount(targets)
+    counts = np.maximum(counts, 1)
+    max_count = np.max(counts)
+    weights = (max_count / counts) ** 0.25
+    return torch.FloatTensor(weights)
 
 def get_focal_loss(class_counts, device, gamma):
     print(f"nombre de sample pour chaque classe : {class_counts}")
