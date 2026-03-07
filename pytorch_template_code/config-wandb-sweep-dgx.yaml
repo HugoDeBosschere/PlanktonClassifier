@@ -44,18 +44,12 @@ parameters:
   loss.lossname:
     value: "CrossEntropyLoss"
   loss.is_weighted:
-    value: [False,True]
+    values: [False,True]
   loss.is_article_weighted:
-    value: [True,False] 
+    values: [True,False] 
 
-  
-
-
-  
   train.nepochs: 
-    value: 8
-  train.is_weighted:
-    values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+    value: 10
   train.test_end_train:
     value: False
 
