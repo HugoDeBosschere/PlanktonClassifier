@@ -66,9 +66,9 @@ parameters:
 
   
   logging.logdir:
-    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs # Better to provide the fullpath, especially on the cluster
+    value: ${JOB_WORKSPACE}/logs # Better to provide the fullpath, especially on the cluster
   logging.save_dir:
-    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
+    value: ${JOB_WORKSPACE}/logs 
 
 
   
