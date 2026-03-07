@@ -1,5 +1,5 @@
 #This is useful to launch a hyperband algorithm or to have several gpus working on the same sweep
 #To use it, one must first instantiate a wandb sweep and get the sweep_id to use it 
-sweep_id : hugo-debosschere-are-na/WinningKaggle/tpnwsa93
+sweep_id : hugo-debosschere-are-na/WinningKaggle/oyb9aepq
 tmp_testpath: '$TMPDIR/dataset/test' #None on the dce because rsync is too slow
 tmp_trainpath: '$TMPDIR/dataset/train' #None on the dce because rsync is too slow
