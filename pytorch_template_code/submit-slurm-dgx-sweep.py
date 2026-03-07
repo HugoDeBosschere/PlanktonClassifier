@@ -68,7 +68,6 @@ cat "$JOB_WORKSPACE/config.yaml"
 
 echo "Checking out the correct version of the code commit_id {commit_id}"
 cd "$JOB_WORKSPACE/code"
-git checkout {commit_id}
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
