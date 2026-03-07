@@ -28,13 +28,13 @@ parameters:
     value : AdamW
   optim.params.lr:
     value : 0.004
-  optim.params.lr_decay:
-    value: 0.97
   optim.params.weight_decay:
     value: 0.00
   optim.params.amsgrad:
     value: False 
 
+  scheduler.lr_decay:
+    value: 0.97
     
   loss.lossname:
     value: "CrossEntropyLoss"
