@@ -409,15 +409,12 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
     return img_probs
 
 
-def test_ensemble(ensemble_yaml_path, send_kaggle_bool=True):
+def test_ensemble(ensemble_config, send_kaggle_bool=True):
     """
     Orchestrates the ensemble testing by parsing parallel lists of weights and configs,
     handling OS-level variable expansions for dynamic paths.
     """
     use_cuda = torch.cuda.is_available()
-    
-    with open(ensemble_yaml_path, "r") as f:
-        ensemble_config = yaml.safe_load(f)
         
     # Extract and expand top-level OS variables
     raw_save_dir = ensemble_config.get("save_dir", "${JOB_WORKSPACE}/logs/ensemble")
