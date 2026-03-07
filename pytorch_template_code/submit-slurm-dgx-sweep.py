@@ -35,6 +35,13 @@ rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycac
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
+#This is useful for using Elastic Transform. It may degrade or better performance
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
 echo "Copying the dataset to have faster access to the samples"
 mkdir $TMPDIR/dataset
 rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/

@@ -313,6 +313,7 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
     print("Yay on utilise la nouvelle fonction de test !")
 
     model_name = config["model"]["class"]
+    model_class = config["model"]["class"]
     model_path_list = config["test"]["model_path"]
     model_config = config["model"]
     
