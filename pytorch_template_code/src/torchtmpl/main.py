@@ -394,22 +394,21 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
         )
 
     else:
-        actual_model_class = getattr(models.cnn_models, model_name)
-        model = actual_model_class(model_config, input_size, num_classes)
 
         #test loader without valid transforms
         test_loader, input_size, num_classes = data.get_test_dataloaders(
         config, use_cuda, tmp_testpath=tmp_testpath
         )
+        
+        actual_model_class = getattr(models.cnn_models, model_name)
+        model = actual_model_class(model_config, input_size, num_classes)
+
+        
 
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.to(device)
     model.eval()
 
-    # 2. Build the dataloader specific to this model's transforms
-    test_loader, input_size, num_classes = data.get_test_dataloaders(
-        config, use_cuda, tmp_testpath=tmp_testpath
-    )
 
     # 4. Extract Probabilities
     img_probs = {}
