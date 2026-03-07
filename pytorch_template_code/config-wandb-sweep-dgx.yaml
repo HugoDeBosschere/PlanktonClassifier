@@ -1,7 +1,7 @@
 #This config is used to test several values 
 
 program: main.py
-name: hyperpop
+name: discoditto
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
