@@ -138,7 +138,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             logging.info("We are using a Focal Loss")
             loss = optim.get_focal_loss(class_counts, device, loss_config["gamma"])
         elif is_weighted:
-            is_article_weighted = loss["is_article_weighted"]
+            is_article_weighted = loss_config["is_article_weighted"]
             loss = optim.get_weighted_loss(lossname, class_counts, device, is_article_weighted=is_article_weighted)
             logging.info("We are using a weighted loss")
         else:
