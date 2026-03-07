@@ -115,7 +115,6 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
             v2.Grayscale(), 
             v2.Resize((128, 128), antialias=True),
             v2.RandomHorizontalFlip(p=0.5),
-            v2.ElasticTransform(alpha=50.0, sigma=5.0),
             v2.ColorJitter(brightness=0.2, contrast=0.2),
             v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0),
             v2.ToImage(), 

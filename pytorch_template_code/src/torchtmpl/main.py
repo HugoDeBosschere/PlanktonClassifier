@@ -97,7 +97,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             
             
             data_cfg = resolve_data_config(model.pretrained_cfg, model=model.get_backbone())
-            train_transform = create_transform(**data_cfg, is_training=True, scale=(0.8, 1.0), color_jitter=0)
+            train_transform = create_transform(**data_cfg, is_training=True, scale=(0.8, 1.0), color_jitter=0, hflip=0)
             valid_transform = create_transform(**data_cfg, is_training=False)
         
         pretrained_in_color = model_config.get("pretrained_in_color", False)#To know if the pretrained_model takes Black and White pictures as inputs or RGB images

@@ -125,7 +125,6 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
 
     gpu_transforms = v2.Compose([
             v2.RandomHorizontalFlip(p=0.5),
-            v2.ElasticTransform(alpha=50.0, sigma=5.0)
         ])
 
 
