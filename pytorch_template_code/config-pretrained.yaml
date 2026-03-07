@@ -27,7 +27,9 @@ parameters:
   optim.algo:
     value : AdamW
   optim.params.lr:
-    value : 0.0005
+    value : 0.004
+  optim.params.lr_decay:
+    value: 0.97
   optim.params.weight_decay:
     value: 0.00
   optim.params.amsgrad:
@@ -67,7 +69,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value: 'mobilenetv2_100' 
+    value: 'mobilenetv2_140'
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:

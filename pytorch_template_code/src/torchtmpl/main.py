@@ -148,6 +148,12 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         logging.info("= Optimizer")
         optim_config = config["optim"]
         optimizer = optim.get_optimizer(optim_config, filter(lambda p: p.requires_grad, model.parameters()))
+        
+        lr_decay = config["optim"]["params"].get("lr_decay", 1.0) 
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=lr_decay)
+        
+        logging.info(f"the lr_decay rate is {lr_decay} %")
+
         logging.info(f"We are running the latest code ! Yay !")
         # Build the callbacks
         logging_config = config["logging"]
@@ -277,6 +283,12 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
                 artifact = wandb.Artifact(name="best-model-f1score",type ="model",metadata={"score" : f1score, "epoch" : e})
                 artifact.add_file(model_checkpoint_f1score.savepath)
                 wandb.log_artifact(artifact)
+
+            #Update the learning rate
+            scheduler.step()
+            
+            current_lr = scheduler.get_last_lr()[0]
+            logging.info(f"Epoch {e} complete. New LR: {current_lr:.6f}")
 
             # Update the dashboard
             metrics = {"train_CE": train_loss, "test_CE": test_loss, "f1score": f1score}
