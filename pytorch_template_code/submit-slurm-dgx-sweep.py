@@ -10,10 +10,10 @@ def makejob(commit_id, configpath, nruns, func):
     return f"""#!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
-#SBATCH --job-name=scheduler
+#SBATCH --gres=gpu:nvidia_a100_1g.10gb:1
+#SBATCH --job-name=sweep
 #SBATCH --nodes=1
-#SBATCH --partition=prod80
+#SBATCH --partition=prod10
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
@@ -53,6 +53,14 @@ cat $TMPDIR/config.yaml
 echo "Checking out the correct version of the code commit_id {commit_id}"
 cd $TMPDIR/code
 git checkout {commit_id}
+
+# ... #SBATCH directives ...
+
+echo "=== CHECKING SHARED MEMORY LIMIT ==="
+df -h /dev/shm
+echo "===================================="
+
+python main.py --config config.yaml
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
