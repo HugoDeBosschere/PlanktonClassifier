@@ -149,10 +149,9 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         optim_config = config["optim"]
         optimizer = optim.get_optimizer(optim_config, filter(lambda p: p.requires_grad, model.parameters()))
         
-         
+        logging.info("= Scheduler")
         scheduler = optim.get_scheduler(optimizer, config)
         
-        logging.info(f"the lr_decay rate is {lr_decay} %")
 
         logging.info(f"We are running the latest code ! Yay !")
         # Build the callbacks
