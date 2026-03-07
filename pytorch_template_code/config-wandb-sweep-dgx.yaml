@@ -1,7 +1,7 @@
 #This config is used to test several values 
 
 program: main.py
-name: discoditto  
+name: chad  
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
@@ -47,6 +47,11 @@ parameters:
     values: [False,True]
   loss.is_article_weighted:
     values: [True,False] 
+  
+  scheduler.lr_decay:
+    distribution: uniform
+    max: 1.0 
+    min : 0.97
 
   train.nepochs: 
     value: 10
