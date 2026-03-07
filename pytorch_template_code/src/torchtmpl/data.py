@@ -15,6 +15,7 @@ from torchvision.transforms import v2
 import numpy as np
 import matplotlib.pyplot as plt
 import torchvision.datasets as datasets
+from sklearn.model_selection import train_test_split
 
 
 
@@ -142,11 +143,17 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
 
     logging.info(f"  - I loaded {len(base_dataset)} samples")
 
-    indices = list(range(len(base_dataset)))
-    random.shuffle(indices)
-    num_valid = int(valid_ratio * len(base_dataset))
-    train_indices = indices[num_valid:]
-    valid_indices = indices[:num_valid]
+    targets = base_dataset.targets
+    indices = np.arange(len(base_dataset))
+
+    # Fractionnement stratifié
+    # random_state=21 assure que vous obtenez le même split à chaque run
+    train_indices, valid_indices = train_test_split(
+        indices,
+        test_size=data_config["valid_ratio"],
+        stratify=targets,
+        random_state=21
+    )
 
     train_subset = torch.utils.data.Subset(base_dataset, train_indices)
     valid_subset = torch.utils.data.Subset(base_dataset, valid_indices)
