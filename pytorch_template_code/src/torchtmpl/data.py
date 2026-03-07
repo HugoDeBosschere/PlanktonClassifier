@@ -92,9 +92,9 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
                 shear=[-15, 15, -15, 15], 
                 interpolation=v2.InterpolationMode.BILINEAR
             ),
-            v2.ColorJitter(brightness=0.2, contrast=0.2),
-            v2.RandomAdjustSharpness(sharpness_factor=1.2, p=0.5),
-            v2.RandomRotation(degrees=180, interpolation=v2.InterpolationMode.BILINEAR)
+            #v2.ColorJitter(brightness=0.2, contrast=0.2),
+            #v2.RandomAdjustSharpness(sharpness_factor=1.2, p=0.5),
+            #v2.RandomRotation(degrees=180, interpolation=v2.InterpolationMode.BILINEAR)
         ])
         
         if pretrained_in_color:
