@@ -352,7 +352,7 @@ def apply_tta(model, img_batch, tta_operations):
 
 
 @torch.no_grad()
-def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=None):
+def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=None,tta_operations=None):
     """
     Loads a single model from its specific config, runs TTA inference, 
     and returns a dictionary of filename -> probability tensor.
@@ -366,9 +366,10 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
     model_name = config["model"]["class"]
     model_config = config["model"]
     
-    # Extract TTA instructions, default to 'identity' if missing
-    test_config = config.get("test", {})
-    tta_operations = test_config.get("tta_transforms", ["identity"])
+    if tta_operations is None:
+        test_config = config.get("test", {})
+        tta_operations = test_config.get("tta_transforms", ["identity"])
+    
     print(f"  - Using TTA operations: {tta_operations}")
     
     num_classes = 86
@@ -399,7 +400,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
         test_loader, input_size, num_classes = data.get_test_dataloaders(
         config, use_cuda, tmp_testpath=tmp_testpath
         )
-        
+
         actual_model_class = getattr(models.cnn_models, model_name)
         model = actual_model_class(model_config, input_size, num_classes)
 
@@ -442,7 +443,9 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     # Safely expand tmp_testpath if it exists in the yaml
     raw_tmp_testpath = ensemble_config.get("tmp_testpath", None)
     tmp_testpath = os.path.expandvars(raw_tmp_testpath) if raw_tmp_testpath else None
-        
+    
+    global_tta = test_config.get("tta_transforms", ["identity"])
+
     # Extract the nested YAML structure
     test_config = ensemble_config.get("test", {})
     model_paths = test_config.get("model_path", [])
@@ -468,7 +471,7 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     for model_path, config_path in all_models:
         print(f"\nEvaluating: {model_path}")
         # Pass the expanded tmp_testpath down to the extractor
-        probs_dict = extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath)
+        probs_dict = extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath,tta_operations=global_tta)
         
         for filename, prob in probs_dict.items():
             ensemble_probs[filename].append(prob)
