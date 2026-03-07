@@ -10,23 +10,35 @@
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --array=1-1
 
-
 current_dir=`pwd`
 export PATH=$PATH:~/.local/bin
-export HF_TOKEN=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 #
+export HF_TOKEN=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 # Attention à ne pas commit ce token en clair en production
 echo "Session " ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}
 
 echo "Running on " $(hostname)
 
+# 1. Définition d'un espace de travail unique pour éviter les collisions entre jobs/tasks
+JOB_WORKSPACE="$TMPDIR/$USER/job_${SLURM_ARRAY_JOB_ID}_task_${SLURM_ARRAY_TASK_ID}"
+
+# 2. Nettoyage automatique à la fin du script (succès ou échec)
+trap 'echo "Cleaning up workspace..."; rm -rf "$JOB_WORKSPACE"' EXIT
+
+echo "Creating workspace at $JOB_WORKSPACE"
+mkdir -p "$JOB_WORKSPACE/code"
+mkdir -p "$JOB_WORKSPACE/dataset"
+
+# Isolation des dossiers WandB pour les sweeps
+export WANDB_DIR="$JOB_WORKSPACE/wandb"
+mkdir -p "$WANDB_DIR"
+
 echo "Copying the source directory and data"
 date
-mkdir $TMPDIR/code
-rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' --exclude '*.egg-info' --exclude 'build' --exclude 'dist' . $TMPDIR/code
+# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv) et de git
+rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__'          --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv'          --exclude '.venv' --exclude '.git' . "$JOB_WORKSPACE/code"
 
 export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-#This is useful for using Elastic Transform. It may degrade or better performance
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
@@ -34,16 +46,18 @@ export VECLIB_MAXIMUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
 
 echo "Copying the dataset to have faster access to the samples"
-mkdir $TMPDIR/dataset
-rsync -aph --info=progress2 ~/dataset/ $TMPDIR/dataset/
-envsubst </raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmpkpbmkyfi-config.yml> $TMPDIR/config.yaml
+# Assure-toi que ~/dataset/ pointe bien vers /raid/home/... sur le noeud d'exécution
+rsync -aph --info=progress2 ~/dataset/ "$JOB_WORKSPACE/dataset/"
+
+# 4. Génération de la configuration dans l'espace isolé
+envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmps8rqk6kp-config.yml" > "$JOB_WORKSPACE/config.yaml"
 
 echo "Verifying that the right configuration has been generated" 
-cat $TMPDIR/config.yaml
+cat "$JOB_WORKSPACE/config.yaml"
 
-echo "Checking out the correct version of the code commit_id 2f452b654fbc5979ab0a10aa7640c934d287809b"
-cd $TMPDIR/code
-git checkout 2f452b654fbc5979ab0a10aa7640c934d287809b
+echo "Checking out the correct version of the code commit_id 109285391c070694fe26fb216111405450d61c9f"
+cd "$JOB_WORKSPACE/code"
+git checkout 109285391c070694fe26fb216111405450d61c9f
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
@@ -53,7 +67,7 @@ source venv/bin/activate
 python -m pip install .
 
 echo "Training"
-python -m torchtmpl.main $TMPDIR/config.yaml create_sweep
+python -m torchtmpl.main "$JOB_WORKSPACE/config.yaml" create_sweep
 
 if [[ $? != 0 ]]; then
     exit -1
