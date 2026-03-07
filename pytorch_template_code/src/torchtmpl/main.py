@@ -444,6 +444,8 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     raw_tmp_testpath = ensemble_config.get("tmp_testpath", None)
     tmp_testpath = os.path.expandvars(raw_tmp_testpath) if raw_tmp_testpath else None
     
+    test_config = ensemble_config.get("test", {})
+
     global_tta = test_config.get("tta_transforms", ["identity"])
 
     # Extract the nested YAML structure
