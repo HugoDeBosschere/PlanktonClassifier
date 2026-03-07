@@ -10,15 +10,14 @@
 #SBATCH --error=logslurms/slurm-%A_%a.err
 #SBATCH --array=1-1
 
-current_dir=`pwd`
 export PATH=$PATH:~/.local/bin
 export HF_TOKEN=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 # Attention à ne pas commit ce token en clair en production
-echo "Session " ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}
 
-echo "Running on " $(hostname)
+echo "Session ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Running on $(hostname)"
 
-# 1. Définition d'un espace de travail unique pour éviter les collisions entre jobs/tasks
-JOB_WORKSPACE="$TMPDIR/$USER/job_${SLURM_ARRAY_JOB_ID}_task_${SLURM_ARRAY_TASK_ID}"
+# 1. Définition d'un espace de travail unique sur le disque local (rapide) du noeud
+export JOB_WORKSPACE="$TMPDIR/$USER/job_${SLURM_ARRAY_JOB_ID}_task_${SLURM_ARRAY_TASK_ID}"
 
 # 2. Nettoyage automatique à la fin du script (succès ou échec)
 trap 'echo "Cleaning up workspace..."; rm -rf "$JOB_WORKSPACE"' EXIT
@@ -33,40 +32,45 @@ mkdir -p "$WANDB_DIR"
 
 echo "Copying the source directory and data"
 date
-# 3. Exclusion vitale des dossiers d'environnement virtuel locaux (.venv, venv)
-rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__'          --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv'          --exclude '.venv' . "$JOB_WORKSPACE/code"
+# 3. Copie du code vers l'espace isolé
+rsync -r --exclude logs --exclude logslurms --exclude configs --exclude '__pycache__' \
+         --exclude '*.egg-info' --exclude 'build' --exclude 'dist' --exclude 'venv' \
+         --exclude '.venv' . "$JOB_WORKSPACE/code"
 
-export TMPDIR
 export PYTORCH_ALLOC_CONF=expandable_segments:True 
 
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-export VECLIB_MAXIMUM_THREADS=1
-export NUMEXPR_NUM_THREADS=1
+# Variables d'optimisation CPU commentées (à réactiver si besoin de profiler les Dataloaders)
+#export OMP_NUM_THREADS=1
+#export MKL_NUM_THREADS=1
+#export OPENBLAS_NUM_THREADS=1
+#export VECLIB_MAXIMUM_THREADS=1
+#export NUMEXPR_NUM_THREADS=1
 
 echo "Copying the dataset to have faster access to the samples"
-# Assure-toi que ~/dataset/ pointe bien vers /raid/home/... sur le noeud d'exécution
-rsync -aph --info=progress2 ~/dataset/ "$JOB_WORKSPACE/dataset/"
+rsync -aph --info=progress2 ./dataset/ "$JOB_WORKSPACE/dataset/"
 
-# 4. Génération de la configuration dans l'espace isolé
-envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp1b13b4fl-config.yml" > "$JOB_WORKSPACE/config.yaml"
+# 4. Génération de la configuration (envsubst utilisera le bon JOB_WORKSPACE local)
+envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp_gxehkha-config.yml" > "$JOB_WORKSPACE/config.yaml"
 
 echo "Verifying that the right configuration has been generated" 
 cat "$JOB_WORKSPACE/config.yaml"
 
-echo "Checking out the correct version of the code commit_id 1d686af38c639e0845859d6b23e7b9a102636100"
+echo "Checking out the correct version of the code commit_id f93935fb275f274154d039615f4455ce9c0cdbfb"
 cd "$JOB_WORKSPACE/code"
-git checkout 1d686af38c639e0845859d6b23e7b9a102636100
+
+echo "=== CHECKING SHARED MEMORY LIMIT ==="
+df -h /dev/shm
+echo "===================================="
 
 echo "Setting up the virtual environment"
 python3 -m venv venv
 source venv/bin/activate
 
-# Install the library
+# Install the library inside the virtual env
 python -m pip install .
 
 echo "Training"
+# Lancement de l'entrainement via le module
 python -m torchtmpl.main "$JOB_WORKSPACE/config.yaml" create_sweep
 
 if [[ $? != 0 ]]; then

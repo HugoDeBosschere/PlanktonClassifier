@@ -28,7 +28,7 @@ dataset/
 # logs and wandb
 logs/*
 wandb/*
-configs/*
+configs/
 
 # pytorch best model and experiments
 best_model.pt
