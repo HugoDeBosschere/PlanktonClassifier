@@ -27,11 +27,11 @@ parameters:
   optim.algo:
     value : AdamW
   optim.params.lr:
-    value : 0.00001
+    value : 0.0005
   optim.params.weight_decay:
-    value: 0.01
+    value: 0.00
   optim.params.amsgrad:
-    value: True
+    value: False 
 
     
   loss.lossname:
