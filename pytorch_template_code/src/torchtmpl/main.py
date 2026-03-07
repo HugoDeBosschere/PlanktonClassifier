@@ -163,7 +163,10 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         else:
             logname = model_config["class"]
 
-        logdir = utils.generate_unique_logpath(logging_config["logdir"], logname)
+        raw_logdir = os.path.expandvars(logging_config["logdir"])
+        save_dir = os.path.expandvars(logging_config["save_dir"]) #To instantiate the ${JOB_WORKSPACE} temp variable
+
+        logdir = utils.generate_unique_logpath(raw_logdir, logname)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
             logging.info(f"created a logdir at {logdir}")
@@ -172,7 +175,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
 
         # Copy the config file into the logdir
         logdir = pathlib.Path(logdir)
-        save_dir = logging_config["save_dir"]
+        
         with open(logdir / "config.yaml", "w") as file:
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
             yaml.dump(config, file)
@@ -309,23 +312,16 @@ def send_kaggle(filepath):
     print("fichier envoyé !")
     
 @torch.no_grad()
-def test(config,send_kaggle_bool=True,tmp_testpath=None):
+def test(config, send_kaggle_bool=True, tmp_testpath=None):
     """
-    This function should take the model we want to test ie probably the best model 
-    0.jpg, 1 
-    1.jpg, 10 
-    ...
-    121427.jpg, 37
-
-    The name of the file is still to be discussed but we can imagine taking the jobid of the slurm submission
+    Evaluates the model and generates a CSV for Kaggle submission.
     """
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda") if use_cuda else torch.device("cpu")
-    print(f"Device used {device}")
+    print(f"Device used: {device}")
     print("Yay on utilise la nouvelle fonction de test !")
 
     model_name = config["model"]["class"]
-    model_class = config["model"]["class"]
     model_path_list = config["test"]["model_path"]
     model_config = config["model"]
     
@@ -334,47 +330,55 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
     else:
         csv_base_name = model_name
 
-    # Hoisted outside the loop
-    save_dir = config["test"]["save_dir"] 
+    # Properly expand the shell variables
+    save_dir = os.path.expandvars(config["test"]["save_dir"])
+    
+    # Optional performance fix: Load the test data ONCE outside the loop 
+    # since it doesn't change between model evaluations.
+    test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda, tmp_testpath=tmp_testpath)
     
     for model_path in model_path_list:
         print(f"We are currently testing the model at {model_path}")
-        unique_save_path = utils.generate_unique_csv(save_dir,csv_base_name)
-        print(f"unique save path is {unique_save_path}")
-        test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda,tmp_testpath=tmp_testpath)
+        unique_save_path = utils.generate_unique_csv(save_dir, csv_base_name)
+        print(f"Unique save path is {unique_save_path}")
         
-        model_config = config["model"]
-
         if "pretrained_path" in model_config and model_config["pretrained_path"]:
-            model = model_class(
-                pretrained_path=pretrained_path,
-                pretrained = False, 
+            # Dynamically fetch the class from the correct module
+            actual_model_class = getattr(models.pretrained_models, model_name)
+            model = actual_model_class(
+                pretrained_path=model_config["pretrained_path"],
+                pretrained=False, 
                 num_classes=num_classes, 
             )
         else:
-            model_class = getattr(models.cnn_models, model_name)
-            model = model_class(model_config, input_size, num_classes)
+            # Dynamically fetch the class for custom CNNs
+            actual_model_class = getattr(models.cnn_models, model_name)
+            model = actual_model_class(model_config, input_size, num_classes)
 
-        model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
+        # Removed the eval() line entirely.
+
+        # Load weights and push to device
         model.load_state_dict(torch.load(model_path, weights_only=True))
         model.to(device)
+        model.eval()
 
-        with open(unique_save_path,"w") as file:
-            model.eval()
-            print(f"fichier crée à l'adresse : {unique_save_path}")
-            i = 0
-            file.write("imgname,label \n")
+        with open(unique_save_path, "w") as file:
+            print(f"Fichier créé à l'adresse : {unique_save_path}")
+            file.write("imgname,label\n")
+            
             for img, filenames in test_loader:
                 img = img.to(device)
                 logits = model(img)
-                preds = torch.argmax(logits,dim=1) 
-                for pred, filename in zip(preds,filenames):
-                    file.write(f"{filename}, {pred.item()} \n")
-                    print(filename)
-                    i += 1
-        print("Fin du test.")
+                preds = torch.argmax(logits, dim=1) 
+                
+                for pred, filename in zip(preds, filenames):
+                    file.write(f"{filename},{pred.item()}\n")
+                    
+        print(f"Fin du test pour {model_path}.")
+        
         if send_kaggle_bool:
             send_kaggle(unique_save_path)
+            
     return None
 
 def create_sweep(config):
