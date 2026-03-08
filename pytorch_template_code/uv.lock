@@ -10,12 +10,6 @@ resolution-markers = [
     "python_full_version < '3.11' and sys_platform != 'linux'",
 ]
 
-[manifest]
-members = [
-    "torchtmpl",
-    "uv-deep-project",
-]
-
 [[package]]
 name = "annotated-doc"
 version = "0.0.4"
@@ -2447,11 +2441,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/c7/24/5f1b3bdffd70275f6
 wheels = [
     { url = "https://files.pythonhosted.org/packages/39/08/aaaad47bc4e9dc8c725e68f9d04865dbcb2052843ff09c97b08904852d84/urllib3-2.6.3-py3-none-any.whl", hash = "sha256:bf272323e553dfb2e87d9bfd225ca7b0f467b919d7bbd355436d3fd37cb0acd4", size = 131584, upload-time = "2026-01-07T16:24:42.685Z" },
 ]
-
-[[package]]
-name = "uv-deep-project"
-version = "0.1.0"
-source = { virtual = "uv_deep_project" }
 
 [[package]]
 name = "wandb"
