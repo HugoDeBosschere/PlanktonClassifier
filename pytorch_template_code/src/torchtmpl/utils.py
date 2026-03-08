@@ -306,3 +306,45 @@ def evaluate(model, loader, f_loss, num_classes, device):
 
     return avg_loss, macro_f1
 
+
+class ResizeAndPadToSquare:
+    """
+    Redimensionne le côté le plus long à la taille cible (224), 
+    puis pad le côté le plus court avec la valeur médiane pour obtenir un carré[cite: 204, 206].
+    """
+    def __init__(self, target_size=224):
+        self.target_size = target_size
+
+    def __call__(self, image):
+        w, h = image.size
+        
+        # 1. Redimensionnement homothétique
+        scale = self.target_size / max(w, h)
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        
+        image = image.resize((new_w, new_h), Image.BILINEAR)
+        
+        if new_w == self.target_size and new_h == self.target_size:
+            return image
+            
+        # 2. Extraction des bordures et calcul de la médiane [cite: 206]
+        img_np = np.array(image)
+        if img_np.ndim == 3: # 3 canaux
+            top, bottom = img_np[0, :, :], img_np[-1, :, :]
+            left, right = img_np[:, 0, :], img_np[:, -1, :]
+            borders = np.concatenate([top, bottom, left, right], axis=0)
+            median_val = tuple(np.median(borders, axis=0).astype(int))
+        else: # Niveaux de gris
+            top, bottom = img_np[0, :], img_np[-1, :]
+            left, right = img_np[:, 0], img_np[:, -1]
+            borders = np.concatenate([top, bottom, left, right])
+            median_val = int(np.median(borders))
+
+        # 3. Calcul du padding pour centrer l'image
+        pad_left = (self.target_size - new_w) // 2
+        pad_right = self.target_size - new_w - pad_left
+        pad_top = (self.target_size - new_h) // 2
+        pad_bottom = self.target_size - new_h - pad_top
+        
+        return ImageOps.expand(image, (pad_left, pad_top, pad_right, pad_bottom), fill=median_val)

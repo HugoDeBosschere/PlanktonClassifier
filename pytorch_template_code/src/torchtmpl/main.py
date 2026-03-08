@@ -394,7 +394,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
             to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))
             valid_transform.transforms.insert(0, to_rgb)
 
-            valid_transform = [ResizeAndPadToSquare(224)]
+            valid_transform = [utils.ResizeAndPadToSquare(224)]
             valid_transform.extend([
                 transforms.Grayscale(num_output_channels=3), # Duplication du canal pour le CNN [cite: 205, 208]
                 transforms.ToTensor(),
