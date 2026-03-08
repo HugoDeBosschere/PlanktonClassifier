@@ -20,12 +20,35 @@ On a utilisé des outils d'intelligence artificielle générative à certaines �
 
 ## Commande
 
+Il est recommandé de lancer ces commandes sur le dgx (et non sur le dce) car les données sont téléchargées sur dans un dossier temporaire avant de lancer l'entrainement / le test, ce qui est très long sur le dce mais rapide sur le dgx
 La commandes pour lancer des inférnces, entraînements est 
 
+Pour lancer un entrainement isolé (création de sweep automatique pour la visualisation et le logging sur wandb)
+
 ```
-python -m torchtmpl.main config_file.yaml [train,test,test_ensemble..]
+python -m submit-slurm-dgx-sweep.py config-pretrained.yaml nruns create_sweep
 ```
 
+Pour créer un wandb sweep, il faut d'abord exécuter en ligne de commande
+
+```
+wandb sweep config-wandb-sweep-dgx.yaml 
+```
+
+Il faut ensuite mettre le sweep-id obtenu dans le fichier sweep-id-dgx 
+puis pour qu'un (ou plusieurs) gpu rejoigne le sweep:
+
+```
+python -m submit-slurm-dgx-sweep.py sweep-id-dgx.yaml nruns create_sweep
+```
+
+pour tester les modèles, il faut exécuter: 
+
+```
+python -m submit-slurm-dgx-sweep.py best_model.yaml 1 test_ensemble
+```
+
+ou l'on aura mis dans best_model.yaml les configurations idoines (dans model_path le path vers les poids du modèle, dans model_config le path vers la config du modèle)
 
 ## Bibliographie 
 
