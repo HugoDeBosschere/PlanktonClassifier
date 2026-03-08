@@ -25,6 +25,7 @@ from timm.data import resolve_data_config
 from timm.data.transforms_factory import create_transform 
 import PIL 
 from PIL import Image 
+import torchvision.transforms.functional as TF
 
 # Local imports
 from . import data
@@ -334,9 +335,9 @@ def apply_tta(model, img_batch, tta_operations):
         elif op == 'rot90':
             x = torch.rot90(img_batch, k=1, dims=[2, 3])
         elif op == 'rot15':
-            x = F.rotate(img_batch, angle=15, interpolation=F.InterpolationMode.BILINEAR, fill=0)
+            x = TF.rotate(img_batch, angle=15, interpolation=F.InterpolationMode.BILINEAR, fill=0)
         elif op == 'rot45':
-            x = F.rotate(img_batch, angle=45, interpolation=F.InterpolationMode.BILINEAR, fill=0)
+            x = TF.rotate(img_batch, angle=45, interpolation=F.InterpolationMode.BILINEAR, fill=0)
         else:
             raise ValueError(f"Unknown TTA operation: {op}")
             
@@ -399,6 +400,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                 ])
+            valid_transform = transforms.Compose(valid_transform)
 
 
         #test loader with valid transforms 
