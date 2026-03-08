@@ -26,6 +26,7 @@ from timm.data.transforms_factory import create_transform
 import PIL 
 from PIL import Image 
 import torchvision.transforms.functional as TF
+from torchvision.transforms import v2
 
 # Local imports
 from . import data
@@ -429,7 +430,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
 
         
 
-    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.load_state_dict(torch.load(model_path, , map_location=device, weights_only=True))
     model.to(device)
     model.eval()
 
