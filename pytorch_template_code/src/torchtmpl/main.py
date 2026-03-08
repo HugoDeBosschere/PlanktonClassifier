@@ -392,7 +392,15 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
         if model_config["pretrained_in_color"]:
             to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))
             valid_transform.transforms.insert(0, to_rgb)
-        
+
+            valid_transform = [ResizeAndPadToSquare(224)]
+            valid_transform.extend([
+                transforms.Grayscale(num_output_channels=3), # Duplication du canal pour le CNN [cite: 205, 208]
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                ])
+
+
         #test loader with valid transforms 
         test_loader, input_size, num_classes = data.get_test_dataloaders(
         config, use_cuda, tmp_testpath=tmp_testpath, input_transform = valid_transform
