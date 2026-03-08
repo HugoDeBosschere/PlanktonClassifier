@@ -53,3 +53,8 @@ où l'on aura mis dans best_model.yaml les configurations idoines (dans model_pa
 ## Bibliographie 
 
 Panaïotis et al. (2026). *Benchmark of plankton images classification: emphasizing features extraction over classifier complexity*. https://essd.copernicus.org/articles/18/945/2026/essd-18-945-2026-discussion.html
+
+### Explicative video
+
+You will find a video (in French) explaining and detailing our project what we did and why did it following this link: 
+https://www.youtube.com/watch?v=1JTjhFDgrtw
