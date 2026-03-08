@@ -69,3 +69,8 @@ Launching a job. To launch a job on the dgx use the submit-slurm-dgx-sweep.py fu
 you must call uv run python -u submit-slurm-dgx-sweep.py config/file/.yaml nruns function/to/be/called 
 
 The -u flag is good practice to get accurate logs (the stderr and stdout buffers are dumped and logs are seen in real time which helps to locate the erros)
+
+### Explicative video
+
+You will find a video (in French) explaining and detailing our project what we did and why did it following this link: 
+https://www.youtube.com/watch?v=1JTjhFDgrtw
