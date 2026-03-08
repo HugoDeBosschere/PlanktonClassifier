@@ -2,7 +2,7 @@ save_dir: "${JOB_WORKSPACE}/logs/ensemble"
 tmp_testpath: '$TMPDIR/dataset/test'
 test:
     model_path: [
-                /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/best_model_clean.pytorch_template_code
+                /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/best_model_clean.pth
                 ]
     model_config_path: [
                 /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/config.yaml
