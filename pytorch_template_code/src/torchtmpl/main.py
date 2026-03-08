@@ -394,13 +394,16 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
             to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))
             valid_transform.transforms.insert(0, to_rgb)
 
-            valid_transform = [utils.ResizeAndPadToSquare(224)]
-            valid_transform.extend([
-                transforms.Grayscale(num_output_channels=3), # Duplication du canal pour le CNN [cite: 205, 208]
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                ])
-            valid_transform = transforms.Compose(valid_transform)
+            is_Louis = model_config.get("is_Louis",False)
+
+            if is_Louis:
+                valid_transform = [utils.ResizeAndPadToSquare(224)]
+                valid_transform.extend([
+                    transforms.Grayscale(num_output_channels=3), # Duplication du canal pour le CNN [cite: 205, 208]
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                    ])
+                valid_transform = transforms.Compose(valid_transform)
 
 
         #test loader with valid transforms 
@@ -411,8 +414,14 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
     else:
 
         #test loader without valid transforms
+        valid_transform = v2.Compose([
+            v2.Grayscale(), 
+            v2.Resize((128, 128), antialias=True),
+            v2.ToImage(), 
+            v2.ToDtype(torch.float32, scale=True),
+        ])
         test_loader, input_size, num_classes = data.get_test_dataloaders(
-        config, use_cuda, tmp_testpath=tmp_testpath
+        config, use_cuda, tmp_testpath=tmp_testpath,input_transform=valid_transform
         )
 
         actual_model_class = getattr(models.cnn_models, model_name)
