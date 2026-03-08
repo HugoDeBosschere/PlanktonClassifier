@@ -7,7 +7,7 @@ test:
                 /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/config.yaml] 
 
 
-    tta_transforms: ["identity","rot90",'hflip']
+    tta_transforms: ["identity","rot90",'hflip',"vflip"]
 
     tta_entropy: true
 
