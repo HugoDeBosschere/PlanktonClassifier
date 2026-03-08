@@ -6,7 +6,7 @@ Il est constitué de 3 branches:
 - `dev_Louis`
 - `tta`
 
-La branche `main` est celle qui contient le code le plus aboutit et qui reprend le template. Les deux autres branches sont plus exploratoires et ne reprennent pas nécessairement la structure du template.
+La branche `main` est celle qui contient le code le plus abouti et qui reprend le template. Les deux autres branches sont plus exploratoires et ne reprennent pas nécessairement la structure du template.
 
 ## Organisation du travail
 
@@ -16,12 +16,11 @@ Le travail fourni peut se diviser en 3 axes :
 - implémenter test time augmentation, de l'ensembling de modèles et du zero shot de modèle comme CLIP
 
 
-On a utilisé des outils d'intelligence artificielle générative à certaines étapes du projet :  debugging, amélioration du code existant etc...
+Nous avons utilisé des outils d'intelligence artificielle générative à certaines étapes du projet :  debugging, amélioration du code existant etc...
 
 ## Commande
 
 Il est recommandé de lancer ces commandes sur le dgx (et non sur le dce) car les données sont téléchargées sur dans un dossier temporaire avant de lancer l'entrainement / le test, ce qui est très long sur le dce mais rapide sur le dgx
-La commandes pour lancer des inférnces, entraînements est 
 
 Pour lancer un entrainement isolé (création de sweep automatique pour la visualisation et le logging sur wandb)
 
@@ -48,7 +47,7 @@ pour tester les modèles, il faut exécuter:
 python -m submit-slurm-dgx-sweep.py best_model.yaml 1 test_ensemble
 ```
 
-ou l'on aura mis dans best_model.yaml les configurations idoines (dans model_path le path vers les poids du modèle, dans model_config le path vers la config du modèle)
+où l'on aura mis dans best_model.yaml les configurations idoines (dans model_path le path vers les poids du modèle, dans model_config le path vers la config du modèle)
 
 ## Bibliographie 
 
