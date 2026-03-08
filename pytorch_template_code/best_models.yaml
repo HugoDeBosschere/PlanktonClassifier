@@ -11,7 +11,7 @@ test:
 
     tta_transforms: ["identity","rot90","hflip","rot45","rot15"]
 
-    tta_entropy: false
+    tta_entropy: true
 
     ensemble_temperature: 1.0
 
