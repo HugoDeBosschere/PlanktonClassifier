@@ -27,6 +27,7 @@ import PIL
 from PIL import Image 
 import torchvision.transforms.functional as TF
 from torchvision.transforms import v2
+import torch.nn.functional as F_nn
 
 # Local imports
 from . import data
@@ -356,9 +357,75 @@ def apply_tta(model, img_batch, tta_operations):
     avg_probs = prob_sum / num_ops
     return avg_probs
 
+def apply_tta_entropy(model, img_batch, tta_operations, temperature=1.0):
+    """
+    Applies TTA operations and aggregates probabilities using an Entropy-Weighted Average.
+    """
+    all_probs = []
+    all_entropies = []
+    
+    for op in tta_operations:
+        # Geometric (Orthogonal)
+        if op == 'identity':
+            x = img_batch
+        elif op == 'hflip':
+            x = torch.flip(img_batch, dims=[3])
+        elif op == 'vflip':
+            x = torch.flip(img_batch, dims=[2])
+        elif op == 'rot90':
+            x = torch.rot90(img_batch, k=1, dims=[2, 3])
+            
+        # Geometric (Non-Orthogonal)
+        elif op == 'rot15':
+            x = TF.rotate(img_batch, angle=15, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot30':
+            x = TF.rotate(img_batch, angle=30, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot45':
+            x = TF.rotate(img_batch, angle=45, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot60':
+            x = TF.rotate(img_batch, angle=60, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+            
+        # Photometric
+        elif op == 'contrast_high':
+            # contrast_factor > 1.0 increases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=1.25)
+        elif op == 'contrast_low':
+            # contrast_factor < 1.0 decreases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=0.75)
+        else:
+            raise ValueError(f"Unknown TTA operation: {op}")
+            
+        # Forward pass
+        logits = model(x)
+        probs = F_nn.softmax(logits, dim=1)
+        
+        # Calculate Shannon Entropy: H = -sum(p * log(p))
+        # Add 1e-8 for numerical stability to prevent log(0) yielding NaN
+        entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=1)
+        
+        all_probs.append(probs)
+        all_entropies.append(entropy)
+        
+    # Stack lists into tensors
+    # stacked_probs shape: [num_ops, batch_size, num_classes]
+    stacked_probs = torch.stack(all_probs, dim=0)
+    # stacked_entropies shape: [num_ops, batch_size]
+    stacked_entropies = torch.stack(all_entropies, dim=0)
+    
+    # Compute normalized weights over the num_ops dimension (dim=0)
+    # The negative sign ensures lower entropy (higher confidence) gets a higher weight
+    weights = F_nn.softmax(-stacked_entropies / temperature, dim=0)
+    
+    # Broadcast weights: [num_ops, batch_size] -> [num_ops, batch_size, 1]
+    weights = weights.unsqueeze(-1)
+    
+    # Compute the weighted sum
+    avg_probs = torch.sum(weights * stacked_probs, dim=0)
+    
+    return avg_probs
 
 @torch.no_grad()
-def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=None,tta_operations=None):
+def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=None,tta_operations=None,tta_entropy=False):
     """
     Loads a single model from its specific config, runs TTA inference, 
     and returns a dictionary of filename -> probability tensor.
@@ -439,7 +506,11 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
     img_probs = {}
     for img, filenames in test_loader:
         img = img.to(device)
-        batch_probs = apply_tta(model, img, tta_operations)
+
+        if tta_entropy:
+            batch_probs = apply_tta_entropy(model, img, tta_operations)
+        else:
+            batch_probs = apply_tta(model, img, tta_operations)
         
         for prob, filename in zip(batch_probs, filenames):
             # MUST move to CPU to prevent VRAM exhaustion
@@ -471,6 +542,7 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     test_config = ensemble_config.get("test", {})
 
     global_tta = test_config.get("tta_transforms", ["identity"])
+    tta_entropy = test_config.get("tta_entropy",False)
 
     # Extract the nested YAML structure
     test_config = ensemble_config.get("test", {})
@@ -497,7 +569,7 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     for model_path, config_path in all_models:
         print(f"\nEvaluating: {model_path}")
         # Pass the expanded tmp_testpath down to the extractor
-        probs_dict = extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath,tta_operations=global_tta)
+        probs_dict = extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath,tta_operations=global_tta,tta_entropy=tta_entropy)
         
         for filename, prob in probs_dict.items():
             ensemble_probs[filename].append(prob)

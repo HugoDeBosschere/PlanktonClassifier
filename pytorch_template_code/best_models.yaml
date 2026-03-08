@@ -2,22 +2,13 @@ save_dir: "${JOB_WORKSPACE}/logs/ensemble"
 tmp_testpath: '$TMPDIR/dataset/test'
 test:
     model_path: [
-                #/raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/best_model_clean.pth,
-                /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/first_mobilenet/best_model_from_pretrained.pth,
-                /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/68mobnet/best_model.pt,
-                /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/66mobnet/best_model.pt,
-                /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/first_pollenet/best_model_from_scratch.pt,
                 /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/best_model_clean.pth]
     model_config_path: [
-                        #/raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/config.yaml,
-                        /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/first_mobilenet/config.yaml,
-                        /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/68mobnet/config.yaml,
-                        /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/66mobnet/config.yaml,
-                        /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/first_pollenet/config-sample.yaml,
                         /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/config.yaml] 
 
     tta_transforms: ["identity","rot90",'hflip',"rot15","rot45"]
 
+    tta_entropy: true
 
 
 # model_path: [/raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/best_of_best/best_model_clean.pth,
