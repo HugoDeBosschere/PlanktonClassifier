@@ -23,7 +23,7 @@ test:
 
     tta_entropy: true
 
-    ensemble_temperature: 0.5
+    ensemble_temperature: 0.75
 
 
 # model_path: [
