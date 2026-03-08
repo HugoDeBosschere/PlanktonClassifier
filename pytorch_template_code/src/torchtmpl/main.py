@@ -399,7 +399,24 @@ def apply_tta_entropy(model, img_batch, tta_operations, temperature=1.0):
             x = TF.rotate(img_batch, angle=45, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
         elif op == 'rot60':
             x = TF.rotate(img_batch, angle=60, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
-            
+        
+        elif op == 'scale_80':
+            # Zoom out by 20%, objects appear smaller, padded with 0
+            x = TF.affine(img_batch, angle=0.0, translate=[0, 0], scale=0.8, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'scale_120':
+            # Zoom in by 20%, objects appear larger, edges are cropped
+            x = TF.affine(img_batch, angle=0.0, translate=[0, 0], scale=1.2, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'trans_x':
+            # Simulates a horizontal off-center crop
+            x = TF.affine(img_batch, angle=0.0, translate=[shift_x, 0], scale=1.0, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'trans_y':
+            # Simulates a vertical off-center crop
+            x = TF.affine(img_batch, angle=0.0, translate=[0, shift_y], scale=1.0, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+
         # Photometric
         elif op == 'contrast_high':
             # contrast_factor > 1.0 increases contrast
