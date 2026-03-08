@@ -156,6 +156,10 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         optim_config = config["optim"]
         optimizer = optim.get_optimizer(optim_config, filter(lambda p: p.requires_grad, model.parameters()))
         
+        clip_value = optim_config.get("clip_value", None)
+        if clip_value is not None:
+            logging.info(f"Gradient clipping activé (max_norm={clip_value})")
+
         logging.info("= Scheduler")
         scheduler = optim.get_scheduler(optimizer, config)
         
@@ -236,7 +240,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             logging.info("Entering a new epoch")
             # Train 1 epoch
             time_before_training = time.time()
-            train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size)
+            train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size, clip_value=clip_value)
             time_of_training = (time.time() - time_before_training )/60
             logging.info(f"This epoch took {time_of_training} minutes to train")
 

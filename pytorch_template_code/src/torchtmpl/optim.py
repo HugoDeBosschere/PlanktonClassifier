@@ -6,18 +6,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
 
-
 def get_scheduler(optimizer, config):
     """
     Returns the scheduler based on the config.
     """
-    # Access the new 'scheduler' block directly from the root config
     scheduler_config = config.get("scheduler", {})
     
-    # Extract gamma (lr_decay), defaulting to 1.0 if missing
-    gamma = scheduler_config.get("lr_decay", 1.0)
+    # On récupère le nom, par défaut on garde l'exponentiel pour la rétrocompatibilité
+    sched_name = scheduler_config.get("name", "exponential").lower()
     
-    return lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
+    if sched_name == "cosineannealing":
+        # T_max correspond au nombre total d'époques défini dans la config
+        T_max = config.get("train", {}).get("nepochs", 30) 
+        return lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max)
+        
+    else:
+        # Comportement par défaut (ExponentialLR)
+        gamma = scheduler_config.get("lr_decay", 1.0)
+        return lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
 
 def get_loss(loss_config, trainpath, device):
     gamma = loss_config["gamma"]

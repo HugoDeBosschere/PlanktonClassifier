@@ -105,7 +105,7 @@ class ModelCheckpoint(object):
             return True
         return False
 
-def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512,ona100=False):
+def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512,ona100=False, clip_value = None:
     """
     Train a model for one epoch, iterating over the loader
     using the f_loss to compute the loss and the optimizer
@@ -161,6 +161,10 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_s
         # Backward and optimize
         optimizer.zero_grad()
         loss.backward()
+
+        if clip_value is not None:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_value)
+        
         optimizer.step()
 
         # Update the metrics
@@ -315,7 +319,7 @@ def evaluate(model, loader, f_loss, num_classes, device):
 class ResizeAndPadToSquare:
     """
     Redimensionne le côté le plus long à la taille cible (224), 
-    puis pad le côté le plus court avec la valeur médiane pour obtenir un carré[cite: 204, 206].
+    puis pad le côté le plus court avec la valeur médiane pour obtenir un carré.
     """
     def __init__(self, target_size=224):
         self.target_size = target_size
@@ -333,7 +337,7 @@ class ResizeAndPadToSquare:
         if new_w == self.target_size and new_h == self.target_size:
             return image
             
-        # 2. Extraction des bordures et calcul de la médiane [cite: 206]
+        # 2. Extraction des bordures et calcul de la médiane 
         img_np = np.array(image)
         if img_np.ndim == 3: # 3 canaux
             top, bottom = img_np[0, :, :], img_np[-1, :, :]

@@ -33,6 +33,12 @@ parameters:
   optim.params.amsgrad:
     value: False 
 
+  optim.clip_value:
+    value: 1.0
+
+  scheduler.name:
+    value: "cosineannealing"
+
   scheduler.lr_decay:
     value: 0.99
     
