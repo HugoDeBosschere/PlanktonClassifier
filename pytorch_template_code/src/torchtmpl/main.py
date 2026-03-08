@@ -395,6 +395,7 @@ def apply_tta_entropy(model, img_batch, tta_operations, temperature=1.0):
     """
     all_probs = []
     all_entropies = []
+    print("We are applying tta with entropy")
     
     for op in tta_operations:
         # Geometric (Orthogonal)
@@ -557,6 +558,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
         img = img.to(device)
 
         if tta_entropy:
+            print("Applying tta entropy")
             batch_probs = apply_tta_entropy(model, img, tta_operations)
         else:
             batch_probs = apply_tta(model, img, tta_operations)
@@ -609,11 +611,13 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     
     ensemble_probs = defaultdict(list)
     
+    tta_entropy = test_config.get("tta_entropy",False)
+
     # 1. Accumulate predictions
     for model_path, config_path in all_models:
         print(f"\nEvaluating: {model_path}")
         probs_dict = extract_model_probabilities(
-            model_path, config_path, use_cuda, tmp_testpath, tta_operations=global_tta
+            model_path, config_path, use_cuda, tmp_testpath, tta_operations=global_tta,tta_entropy=tta_entropy
         )
         for filename, prob in probs_dict.items():
             ensemble_probs[filename].append(prob)
