@@ -430,7 +430,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
 
         
 
-    model.load_state_dict(torch.load(model_path, , map_location=device, weights_only=True))
+    model.load_state_dict(torch.load(model_path,map_location=device, weights_only=True))
     model.to(device)
     model.eval()
 
