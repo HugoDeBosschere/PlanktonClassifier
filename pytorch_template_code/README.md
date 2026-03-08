@@ -25,12 +25,13 @@ Il est recommandé de lancer ces commandes sur le dgx (et non sur le dce) car le
 Pour lancer un entrainement isolé (création de sweep automatique pour la visualisation et le logging sur wandb)
 
 ```
-python -m submit-slurm-dgx-sweep.py config-pretrained.yaml nruns create_sweep
+python -u submit-slurm-dgx-sweep.py config-pretrained.yaml nruns create_sweep
 ```
 
 Pour créer un wandb sweep, il faut d'abord exécuter en ligne de commande
 
 ```
+pip install wandb 
 wandb sweep config-wandb-sweep-dgx.yaml 
 ```
 
@@ -38,13 +39,13 @@ Il faut ensuite mettre le sweep-id obtenu dans le fichier sweep-id-dgx
 puis pour qu'un (ou plusieurs) gpu rejoigne le sweep:
 
 ```
-python -m submit-slurm-dgx-sweep.py sweep-id-dgx.yaml nruns create_sweep
+python -u submit-slurm-dgx-sweep.py sweep-id-dgx.yaml nruns create_sweep
 ```
 
 pour tester les modèles, il faut exécuter: 
 
 ```
-python -m submit-slurm-dgx-sweep.py best_model.yaml 1 test_ensemble
+python -u submit-slurm-dgx-sweep.py best_model.yaml 1 test_ensemble
 ```
 
 où l'on aura mis dans best_model.yaml les configurations idoines (dans model_path le path vers les poids du modèle, dans model_config le path vers la config du modèle)
