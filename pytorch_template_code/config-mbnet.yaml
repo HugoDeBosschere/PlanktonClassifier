@@ -48,8 +48,8 @@ clip:
   template: "a photo of a {}"
 
 test:
-  model_path: ["best_model_from_pretrained.pth"]  # or your existing list
+  model_path: ["best_model_from_pretrainedv2.pth"]  # or your existing list
   save_dir : /usr/users/sdim/sdim_10/Desktop/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test_tta
-  tta: False
+  tta: True
 
 #tmp_testpath: "./test"

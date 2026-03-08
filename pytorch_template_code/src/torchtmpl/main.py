@@ -546,9 +546,11 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
         ) 
         
         model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
-        model.load_state_dict(torch.load(model_path))
+        #model.load_state_dict(torch.load(model_path))
+        model.load_state_dict(utils.load_state_dict_fix_prefix(model_path))
         model.to(device)
 
+        
         with open(unique_save_path,"w") as file:
             model.eval()
             print(f"fichier crée à l'adresse : {unique_save_path}")
@@ -572,9 +574,9 @@ def test(config,send_kaggle_bool=True,tmp_testpath=None):
                     # Vertical flip
                     logits_list.append(model(torch.flip(img, dims=[2])))
                     #Rotations: ±15°, ±30°
-                    for angle in [15, -15, 30, -30]:
-                        img_rotated = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR, fill=0)
-                        logits_list.append(model(img_rotated))
+                    # for angle in [15, -15, 30, -30]:
+                    #     img_rotated = F.rotate(img, angle, interpolation=F.InterpolationMode.BILINEAR, fill=0)
+                    #     logits_list.append(model(img_rotated))
                     
                     # Translations: small shifts in x and y directions
                     # Translation parameters: (tx, ty) in pixels
@@ -686,7 +688,8 @@ def test_ensemble(config_paths, send_kaggle_bool=True, tmp_testpath=None, ensemb
         # Build and load model
         model_config = config["model"]
         model = eval(f"models.cnn_models.{model_name}({model_config}, {input_size}, {num_classes})")
-        model.load_state_dict(torch.load(model_path, weights_only=True))
+        #model.load_state_dict(torch.load(model_path, weights_only=True))
+        model.load_state_dict(utils.load_state_dict_fix_prefix(model_path))
         model.to(device)
         model.eval()
         loaded_models.append(model)
@@ -752,8 +755,13 @@ def test_ensemble(config_paths, send_kaggle_bool=True, tmp_testpath=None, ensemb
                         logits_list.append(model(torch.flip(img_batch, dims=[3])))
                         # Vertical flip
                         logits_list.append(model(torch.flip(img_batch, dims=[2])))
+                        # Rotations: 90°, 180°, 270°
+                        logits_list.append(model(torch.rot90(img_batch, k=1, dims=[2, 3])))
+                        logits_list.append(model(torch.rot90(img_batch, k=2, dims=[2, 3])))
+                        logits_list.append(model(torch.rot90(img_batch, k=3, dims=[2, 3])))
                         # Average logits over all augmented versions
                         logits = torch.stack(logits_list, dim=0).mean(dim=0)
+
                     else:
                         logits = model(img_batch)
                     

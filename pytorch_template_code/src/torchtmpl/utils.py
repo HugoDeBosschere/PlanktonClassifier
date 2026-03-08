@@ -111,6 +111,36 @@ def generate_unique_csv(logdir, raw_run_name):
             return log_path
         i = i + 1
 
+def load_state_dict_fix_prefix(state_dict_path, weights_only=False):
+    """
+    Load a state_dict from a file and remove the '_orig_mod.' prefix if present.
+    
+    This is needed when loading models that were saved after being wrapped with
+    torch.compile(), which adds the '_orig_mod.' prefix to all parameter names.
+    
+    Arguments:
+        state_dict_path: Path to the saved state_dict file
+        weights_only: If True, only load weights (torch.load parameter)
+    
+    Returns:
+        state_dict with '_orig_mod.' prefix removed from all keys
+    """
+    state_dict = torch.load(state_dict_path, weights_only=weights_only)
+    
+    # Check if any keys have the '_orig_mod.' prefix
+    if any(key.startswith('_orig_mod.') for key in state_dict.keys()):
+        # Create a new state_dict without the prefix
+        new_state_dict = {}
+        for key, value in state_dict.items():
+            if key.startswith('_orig_mod.'):
+                new_key = key[len('_orig_mod.'):]
+                new_state_dict[new_key] = value
+            else:
+                new_state_dict[key] = value
+        return new_state_dict
+    
+    return state_dict
+
 
 
 

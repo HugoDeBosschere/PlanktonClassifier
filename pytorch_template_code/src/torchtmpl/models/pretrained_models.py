@@ -41,7 +41,7 @@ class PlanktonMobileNet_class(nn.Module):
         # 1. Extracteur de caractéristiques (MobileNetV2 avec width multiplier 1.4)
         # num_classes=0 retire la tête de classification d'origine.
         # pretrained=False because we load fine-tuned weights from checkpoint immediately after
-        self.feature_extractor = timm.create_model('mobilenetv2_140', pretrained=False, num_classes=0)
+        self.feature_extractor = timm.create_model('mobilenetv2_140', pretrained=True, num_classes=0)
         
         # Récupération dynamique de la dimension du vecteur
         in_features = self.feature_extractor.num_features # 1792
