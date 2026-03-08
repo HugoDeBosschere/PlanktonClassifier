@@ -1,65 +1,32 @@
-# Template base code for pytorch
+# Projet de deep learning 2025-2026
 
-This repository contains a template base code for a complete pytorch pipeline.
+Ceci est le repo de Hugo de Bosschere, Antoine Delaby et Louis Huhardeaux.
+Il est constitué de 3 branches:
+- `main`
+- `dev_Louis`
+- `tta`
 
-This is a template because it works on fake data but aims to illustrate some pythonic syntax allowing the pipeline to be modular.
+La branche `main` est celle qui contient le code le plus aboutit et qui reprend le template. Les deux autres branches sont plus exploratoires et ne reprennent pas nécessairement la structure du template.
 
-More specifically, this template base code aims to target :
+## Organisation du travail
 
-- modularity : allowing to change models/optimizers/ .. and their hyperparameters easily
-- reproducibility : saving the commit id, ensuring every run saves its assets in a different directory, recording a summary card for every experiment, building a virtual environnement
+Le travail fourni peut se diviser en 3 axes :
+- entraîner des modèles from scratch, en essayant de trouver les meilleurs hyperparamètres et en surveillant l'évolution des sweeps via Weights and Biais 
+- finetuner des modèles préentraînés en s'inspirant de l'article donné en bibliographie
+- implémenter test time augmentation, de l'ensembling de modèles et du zero shot de modèle comme CLIP
 
-For the last point, if you ever got a good model as an orphane pytorch tensor whithout being able to remember in which conditions, with which parameters and so on you got, you see what I mean. 
 
-## Usage
+On a utilisé des outils d'intelligence artificielle générative à certaines étapes du projet :  debugging, amélioration du code existant etc...
 
-### Local experimentation
+## Commande
 
-For a local experimentation, you start by setting up the environment :
-
-```
-python3 -m virtualenv venv
-source venv/bin/activate
-python -m pip install .
-```
-
-Then you can run a training, by editing the yaml file, then 
+La commandes pour lancer des inférnces, entraînements est 
 
 ```
-python -m torchtmpl.main config.yml train
+python -m torchtmpl.main config_file.yaml [train,test,test_ensemble..]
 ```
 
-And for testing (**not yet implemented**)
 
-```
-python main.py path/to/your/run test
-```
+## Bibliographie 
 
-### Cluster experimentation (**not yet implemented**)
-
-For running the code on a cluster, we provide an example script for starting an experimentation on a SLURM based cluster.
-
-The script we provide is dedicated to a use on our clusters and you may need to adapt it to your setting. 
-
-Then running the simulation can be as simple as :
-
-```
-python3 submit.py
-```
-
-## Testing the functions
-
-Every module/script is equiped with some test functions. Although these are not unitary tests per se, they nonetheless illustrate how to test the provided functions.
-
-For example, you can call :
-
-
-```
-python3 -m virtualenv venv
-source venv/bin/activate
-python -m pip install .
-python -m torchtmpl.models
-```
-
-and this will call the test functions in the `torchtmpl/models/__main__.py` script.
-
+Panaïotis et al. (2026). *Benchmark of plankton images classification: emphasizing features extraction over classifier complexity*. https://essd.copernicus.org/articles/18/945/2026/essd-18-945-2026-discussion.html
