@@ -105,7 +105,7 @@ class ModelCheckpoint(object):
             return True
         return False
 
-def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512,ona100=False, clip_value = None:
+def train(model, loader, f_loss, optimizer, device, dynamic_display=True,batch_size = 512,ona100=False, clip_value = None):
     """
     Train a model for one epoch, iterating over the loader
     using the f_loss to compute the loss and the optimizer
