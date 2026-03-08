@@ -333,6 +333,10 @@ def apply_tta(model, img_batch, tta_operations):
             x = torch.flip(img_batch, dims=[2])
         elif op == 'rot90':
             x = torch.rot90(img_batch, k=1, dims=[2, 3])
+        elif op == 'rot15':
+            x = F.rotate(img_batch, angle=15, interpolation=F.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot45':
+            x = F.rotate(img_batch, angle=45, interpolation=F.InterpolationMode.BILINEAR, fill=0)
         else:
             raise ValueError(f"Unknown TTA operation: {op}")
             
