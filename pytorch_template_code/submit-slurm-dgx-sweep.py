@@ -13,7 +13,7 @@ def makejob(commit_id, configpath, nruns, func):
 #SBATCH --gres=gpu:nvidia_a100_3g.40gb:1
 #SBATCH --job-name=tta
 #SBATCH --nodes=1
-#SBATCH --partition=pro480
+#SBATCH --partition=pro40
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
