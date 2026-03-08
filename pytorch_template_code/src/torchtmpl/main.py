@@ -328,6 +328,7 @@ def apply_tta(model, img_batch, tta_operations):
     num_ops = len(tta_operations)
     
     for op in tta_operations:
+        # Geometric (Orthogonal)
         if op == 'identity':
             x = img_batch
         elif op == 'hflip':
@@ -336,10 +337,24 @@ def apply_tta(model, img_batch, tta_operations):
             x = torch.flip(img_batch, dims=[2])
         elif op == 'rot90':
             x = torch.rot90(img_batch, k=1, dims=[2, 3])
+            
+        # Geometric (Non-Orthogonal)
         elif op == 'rot15':
             x = TF.rotate(img_batch, angle=15, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot30':
+            x = TF.rotate(img_batch, angle=30, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
         elif op == 'rot45':
             x = TF.rotate(img_batch, angle=45, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot60':
+            x = TF.rotate(img_batch, angle=60, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+            
+        # Photometric
+        elif op == 'contrast_high':
+            # contrast_factor > 1.0 increases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=1.25)
+        elif op == 'contrast_low':
+            # contrast_factor < 1.0 decreases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=0.75)
         else:
             raise ValueError(f"Unknown TTA operation: {op}")
             
