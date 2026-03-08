@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:nvidia_a100_3g.40gb:1
-#SBATCH --job-name=sweep
+#SBATCH --gres=gpu:nvidia_a100-sxm4-80gb:1
+#SBATCH --job-name=newsweep
 #SBATCH --nodes=1
-#SBATCH --partition=prod40  
+#SBATCH --partition=prod80
 #SBATCH --time=24:00:00
 #SBATCH --output=logslurms/slurm-%A_%a.out
 #SBATCH --error=logslurms/slurm-%A_%a.err
@@ -50,12 +50,12 @@ echo "Copying the dataset to have faster access to the samples"
 rsync -aph --info=progress2 ./dataset/ "$JOB_WORKSPACE/dataset/"
 
 # 4. Génération de la configuration (envsubst utilisera le bon JOB_WORKSPACE local)
-envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmph3we9stt-config.yml" > "$JOB_WORKSPACE/config.yaml"
+envsubst < "/raid/home/projects/pfe-inserm-2026/Projet_Deep/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/configs/tmp2dgvwszf-config.yml" > "$JOB_WORKSPACE/config.yaml"
 
 echo "Verifying that the right configuration has been generated" 
 cat "$JOB_WORKSPACE/config.yaml"
 
-echo "Checking out the correct version of the code commit_id 3d854733094726c0b7e7cfed383bb94312db5f9e"
+echo "Checking out the correct version of the code commit_id d3e8ebbaeaf614538c18f3ad6832e9471c7ee174"
 cd "$JOB_WORKSPACE/code"
 
 echo "=== CHECKING SHARED MEMORY LIMIT ==="

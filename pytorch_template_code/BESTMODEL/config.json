@@ -1,0 +1,10 @@
+{
+    "model_name": "mobilenetv2_140_clipping_CosineSched",
+    "epochs": 20,
+    "lr": 0.0014,
+    "lr_decay": 0.97,
+    "batch_size": 512,
+    "num_workers": 32,
+    "data_dir": "/raid/home/projects/pfe-inserm-2026/Time_attack/dataset/train",
+    "out_dir": "./models"
+}
