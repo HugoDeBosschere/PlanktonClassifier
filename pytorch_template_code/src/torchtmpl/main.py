@@ -399,7 +399,6 @@ def apply_tta_entropy(model, img_batch, tta_operations, temperature=1.0):
     """
     all_probs = []
     all_entropies = []
-    print("We are applying tta with entropy")
     
     for op in tta_operations:
         # Geometric (Orthogonal)
