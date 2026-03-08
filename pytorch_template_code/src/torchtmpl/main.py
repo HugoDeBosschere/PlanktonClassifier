@@ -540,8 +540,7 @@ def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=
 
 def test_ensemble(ensemble_config, send_kaggle_bool=True):
     """
-    Orchestrates the ensemble testing by parsing parallel lists of weights and configs,
-    handling OS-level variable expansions for dynamic paths.
+    Orchestrates the ensemble testing using Dynamic Entropy-Weighted Averaging.
     """
     use_cuda = torch.cuda.is_available()
         
@@ -550,60 +549,69 @@ def test_ensemble(ensemble_config, send_kaggle_bool=True):
     save_dir = os.path.expandvars(raw_save_dir)
     os.makedirs(save_dir, exist_ok=True)
     
-    # Safely expand tmp_testpath if it exists in the yaml
     raw_tmp_testpath = ensemble_config.get("tmp_testpath", None)
     tmp_testpath = os.path.expandvars(raw_tmp_testpath) if raw_tmp_testpath else None
     
     test_config = ensemble_config.get("test", {})
-
     global_tta = test_config.get("tta_transforms", ["identity"])
-    tta_entropy = test_config.get("tta_entropy",False)
+    
+    # NEW: Extract temperature for entropy weighting (default 1.0)
+    temperature = float(test_config.get("ensemble_temperature", 1.0))
 
-    # Extract the nested YAML structure
-    test_config = ensemble_config.get("test", {})
     model_paths = test_config.get("model_path", [])
     config_paths = test_config.get("model_config_path", [])
     
-    # Critical Safety Check
     if len(model_paths) != len(config_paths):
-        raise ValueError(f"Mismatch in ensemble config: found {len(model_paths)} model paths but {len(config_paths)} config paths.")
+        raise ValueError(f"Mismatch in ensemble config: found {len(model_paths)} models but {len(config_paths)} configs.")
     
-    # Pair them up
     all_models = list(zip(model_paths, config_paths))
     
     if not all_models:
         print("No models found in the ensemble configuration.")
         return
 
-    print(f"Starting ensemble of {len(all_models)} models...")
-    print(f"Using test dataset at: {tmp_testpath}")
+    print(f"Starting dynamic entropy-weighted ensemble of {len(all_models)} models...")
+    print(f"Using temperature T={temperature}")
     
     ensemble_probs = defaultdict(list)
     
     # 1. Accumulate predictions
     for model_path, config_path in all_models:
         print(f"\nEvaluating: {model_path}")
-        # Pass the expanded tmp_testpath down to the extractor
-        probs_dict = extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath,tta_operations=global_tta,tta_entropy=tta_entropy)
-        
+        probs_dict = extract_model_probabilities(
+            model_path, config_path, use_cuda, tmp_testpath, tta_operations=global_tta
+        )
         for filename, prob in probs_dict.items():
             ensemble_probs[filename].append(prob)
             
-    # 2. Average and output
-    print("\nAveraging predictions and writing CSV...")
-    
+    # 2. Dynamic Entropy Weighting and Output
+    print("\nComputing dynamic entropy weights and writing CSV...")
     unique_save_path = utils.generate_unique_csv(save_dir, "ensemble_submission")
     
     with open(unique_save_path, "w") as file:
         file.write("imgname,label\n")
         
         for filename, probs_list in ensemble_probs.items():
-            # Stack the individual probability vectors: (num_models, num_classes)
+            # stacked_probs shape: [num_models, num_classes]
             stacked_probs = torch.stack(probs_list)
-            # Average across the models
-            mean_probs = torch.mean(stacked_probs, dim=0)
-            # Take the final highest probability class
-            final_pred = torch.argmax(mean_probs).item()
+            
+            # Calculate Shannon Entropy per model for this specific image
+            # Shape: [num_models]
+            entropies = -torch.sum(stacked_probs * torch.log(stacked_probs + 1e-8), dim=1)
+            
+            # Compute softmax weights inversely proportional to entropy
+            # Shape: [num_models]
+            weights = F_nn.softmax(-entropies / temperature, dim=0)
+            
+            # Broadcast weights: [num_models] -> [num_models, 1]
+            weights = weights.unsqueeze(1)
+            
+            # Weighted sum across the model dimension (dim=0)
+            # Shape: [num_classes]
+            final_probs = torch.sum(weights * stacked_probs, dim=0)
+            
+            # Extract final prediction
+            final_pred = torch.argmax(final_probs).item()
             
             file.write(f"{filename},{final_pred}\n")
             
