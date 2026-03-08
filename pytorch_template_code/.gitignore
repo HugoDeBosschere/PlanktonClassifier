@@ -25,7 +25,7 @@ venv/
 .venv/
 
 # logs and wandb
-logs/*
+logs/
 wandb/*
 configs/*
 
