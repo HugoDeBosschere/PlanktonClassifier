@@ -4,23 +4,64 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim.lr_scheduler as lr_scheduler
+
+def get_scheduler(optimizer, config):
+    """
+    Returns the scheduler based on the config.
+    """
+    scheduler_config = config.get("scheduler", {})
+    
+    # On récupère le nom, par défaut on garde l'exponentiel pour la rétrocompatibilité
+    sched_name = scheduler_config.get("name", "exponential").lower()
+    
+    if sched_name == "cosineannealing":
+        # T_max correspond au nombre total d'époques défini dans la config
+        T_max = config.get("train", {}).get("nepochs", 30) 
+        return lr_scheduler.CosineAnnealingLR(optimizer, T_max=T_max)
+        
+    else:
+        # Comportement par défaut (ExponentialLR)
+        gamma = scheduler_config.get("lr_decay", 1.0)
+        return lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
 
 def get_loss(loss_config, trainpath, device):
     gamma = loss_config["gamma"]
     lossname = loss_config["lossname"]
     return eval(f"nn.{lossname}()")
 
-def get_weighted_loss(lossname, class_counts, device):
+def get_weighted_loss(lossname, class_counts, device, is_article_weighted=True):
     print(f"nombre de sample pour chaque classe : {class_counts}")
-    weights_per_classes = 1.0 / class_counts.float()
+    
+    # Ensure we are working with floats for division
+    counts = class_counts.float()
+    
+    if is_article_weighted:
+        print("We are using an article weighted loss")
+        # Applying the article's fractional scaling logic directly via PyTorch operations
+        counts = torch.clamp(counts, min=1.0) # Prevents division by zero (equivalent to np.maximum)
+        max_count = torch.max(counts)
+        weights_per_classes = (max_count / counts) ** 0.25
+    else:
+        # Original inverse frequency logic
+        weights_per_classes = 1.0 / counts
+        
     weights_tensor = weights_per_classes.to(device)
     
     if hasattr(nn, lossname):
-        loss = getattr(nn, lossname)
+        loss_class = getattr(nn, lossname)
         # Instantiate: loss_class(weight=weights_tensor)
-        return loss(weight=weights_tensor)
+        return loss_class(weight=weights_tensor)
     else:
         raise ValueError(f"Loss {lossname} not found in torch.nn")
+
+def compute_class_weights(dataset):
+    targets = dataset.targets
+    counts = np.bincount(targets)
+    counts = np.maximum(counts, 1)
+    max_count = np.max(counts)
+    weights = (max_count / counts) ** 0.25
+    return torch.FloatTensor(weights)
 
 def get_focal_loss(class_counts, device, gamma):
     print(f"nombre de sample pour chaque classe : {class_counts}")

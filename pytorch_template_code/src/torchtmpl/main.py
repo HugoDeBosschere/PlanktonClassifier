@@ -8,6 +8,8 @@ import pathlib
 import subprocess 
 import datetime 
 from functools import partial
+from collections import defaultdict
+
 
 # External imports
 import yaml
@@ -15,6 +17,7 @@ import wandb
 import torch
 import torchinfo.torchinfo as torchinfo
 from torchvision import transforms
+import torch.nn.functional as F
 import tqdm
 import time
 import timm
@@ -22,6 +25,9 @@ from timm.data import resolve_data_config
 from timm.data.transforms_factory import create_transform 
 import PIL 
 from PIL import Image 
+import torchvision.transforms.functional as TF
+from torchvision.transforms import v2
+import torch.nn.functional as F_nn
 
 # Local imports
 from . import data
@@ -59,36 +65,48 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         # Build the model
         logging.info("= Model")
         model_config = config["model"]
+        model_name = model_config["class"]
         train_transform = None
         valid_transform = None 
 
         if "pretrained_path" in model_config:
-            logging.info("using a pretrained model") 
-            model = timm.create_model(model_config["pretrained_path"], pretrained=True, num_classes=num_classes)
+            pretrained_path = model_config["pretrained_path"]
+            logging.info(f"Instantiating {model_name} with pre-trained weights.")
             
-            # Conditionally freeze the backbone
+            
+            model_class = getattr(models.pretrained_models, model_name)
+            model = model_class(
+                pretrained_path=pretrained_path,
+                pretrained = True, 
+                num_classes=num_classes, 
+            )
+
+            # 2. Conditionally freeze the backbone using the unified interface
             freeze_pretrained = model_config.get("freeze_pretrained", False)
             if freeze_pretrained:
                 logging.info("Freezing the pre-trained backbone.")
-                for param in model.parameters():
+                for param in model.get_backbone().parameters():
                     param.requires_grad = False
+                
+                # Ensure the classifier block remains strictly unfrozen
+                for param in model.get_classifier().parameters():
+                    param.requires_grad = True
             else:
                 logging.info("Fine-tuning the entire model (backbone unfrozen).")
 
+
             if "old_model_path" in model_config:
                 old_model_path = model_config["old_model_path"]
-                logging.info(f"Loading model at {old_model_path}")
-                model.load_state_dict(torch.load(model_config["old_model_path"],weights_only=True))
-                classifier_module = model.get_classifier() 
-                for param in classifier_module.parameters(): #unfreezing the parameters of the classifier
-                    param.requires_grad = True
-            else:
-                model.reset_classifier(num_classes = NUM_CLASSES)
+                logging.info(f"Loading model state from {old_model_path}")
+                model.load_state_dict(torch.load(old_model_path, weights_only=True), strict=False)
+
             
-            train_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = True)
-            valid_transform = create_transform(**resolve_data_config(model.pretrained_cfg, model=model),is_training = False)
+            
+            data_cfg = resolve_data_config(model.pretrained_cfg, model=model.get_backbone())
+            train_transform = create_transform(**data_cfg, is_training=True, scale=(0.8, 1.0), color_jitter=0,hflip=0)
+            valid_transform = create_transform(**data_cfg, is_training=False)
         
-        pretrained_in_color = model_config["pretrained_in_color"]#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
+        pretrained_in_color = model_config.get("pretrained_in_color", False)#To know if the pretrained_model takes Black and White pictures as inputs or RGB images
 
         # Build the dataloaders
         logging.info("= Building the dataloaders")
@@ -126,7 +144,8 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             logging.info("We are using a Focal Loss")
             loss = optim.get_focal_loss(class_counts, device, loss_config["gamma"])
         elif is_weighted:
-            loss = optim.get_weighted_loss(lossname, class_counts, device)
+            is_article_weighted = loss_config["is_article_weighted"]
+            loss = optim.get_weighted_loss(lossname, class_counts, device, is_article_weighted=is_article_weighted)
             logging.info("We are using a weighted loss")
         else:
             loss = optim.get_loss(loss_config, config["data"]["trainpath"], device)
@@ -136,6 +155,15 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         logging.info("= Optimizer")
         optim_config = config["optim"]
         optimizer = optim.get_optimizer(optim_config, filter(lambda p: p.requires_grad, model.parameters()))
+        
+        clip_value = optim_config.get("clip_value", None)
+        if clip_value is not None:
+            logging.info(f"Gradient clipping activé (max_norm={clip_value})")
+
+        logging.info("= Scheduler")
+        scheduler = optim.get_scheduler(optimizer, config)
+        
+
         logging.info(f"We are running the latest code ! Yay !")
         # Build the callbacks
         logging_config = config["logging"]
@@ -145,7 +173,10 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
         else:
             logname = model_config["class"]
 
-        logdir = utils.generate_unique_logpath(logging_config["logdir"], logname)
+        raw_logdir = os.path.expandvars(logging_config["logdir"])
+        save_dir = os.path.expandvars(logging_config["save_dir"]) #To instantiate the ${JOB_WORKSPACE} temp variable
+
+        logdir = utils.generate_unique_logpath(raw_logdir, logname)
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
             logging.info(f"created a logdir at {logdir}")
@@ -154,7 +185,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
 
         # Copy the config file into the logdir
         logdir = pathlib.Path(logdir)
-        save_dir = logging_config["save_dir"]
+        
         with open(logdir / "config.yaml", "w") as file:
             ###### ADD THE NECESSARY STUFF TO THE TEST CONFIG FILE FOR EASIER TESTING !!!!
             yaml.dump(config, file)
@@ -209,7 +240,7 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
             logging.info("Entering a new epoch")
             # Train 1 epoch
             time_before_training = time.time()
-            train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size)
+            train_loss = utils.train(model, train_loader, loss, optimizer, device,dynamic_display=is_dynamic,batch_size = batch_size, clip_value=clip_value)
             time_of_training = (time.time() - time_before_training )/60
             logging.info(f"This epoch took {time_of_training} minutes to train")
 
@@ -266,6 +297,12 @@ def train_sweep(tmp_testpath=None, tmp_trainpath=None):
                 artifact.add_file(model_checkpoint_f1score.savepath)
                 wandb.log_artifact(artifact)
 
+            #Update the learning rate
+            scheduler.step()
+            
+            current_lr = scheduler.get_last_lr()[0]
+            logging.info(f"Epoch {e} complete. New LR: {current_lr:.6f}")
+
             # Update the dashboard
             metrics = {"train_CE": train_loss, "test_CE": test_loss, "f1score": f1score}
             if wandb_log is not None:
@@ -284,68 +321,345 @@ def send_kaggle(filepath):
     subprocess.run(f"uv run kaggle competitions submit -c 3-md-4040-2026-challenge -f {filepath} -m \"Automatic submission\"",stdout=True,shell=True)
     print("fichier envoyé !")
     
-@torch.no_grad()
-def test(config,send_kaggle_bool=True,tmp_testpath=None):
-    """
-    This function should take the model we want to test ie probably the best model 
-    0.jpg, 1 
-    1.jpg, 10 
-    ...
-    121427.jpg, 37
 
-    The name of the file is still to be discussed but we can imagine taking the jobid of the slurm submission
+
+def apply_tta(model, img_batch, tta_operations):
+    """
+    Applies a list of TTA operations, runs the model, and averages the probabilities.
+    Memory-efficient version using a running sum accumulator.
+    """
+    prob_sum = None
+    num_ops = len(tta_operations)
+    
+    for op in tta_operations:
+        # Geometric (Orthogonal)
+        if op == 'identity':
+            x = img_batch
+        elif op == 'hflip':
+            x = torch.flip(img_batch, dims=[3])
+        elif op == 'vflip':
+            x = torch.flip(img_batch, dims=[2])
+        elif op == 'rot90':
+            x = torch.rot90(img_batch, k=1, dims=[2, 3])
+            
+        # Geometric (Non-Orthogonal)
+        elif op == 'rot15':
+            x = TF.rotate(img_batch, angle=15, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot30':
+            x = TF.rotate(img_batch, angle=30, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot45':
+            x = TF.rotate(img_batch, angle=45, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot60':
+            x = TF.rotate(img_batch, angle=60, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+
+        elif op == 'scale_80':
+            # Zoom out by 20%, objects appear smaller, padded with 0
+            x = TF.affine(img_batch, angle=0.0, translate=[0, 0], scale=0.8, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'scale_120':
+            # Zoom in by 20%, objects appear larger, edges are cropped
+            x = TF.affine(img_batch, angle=0.0, translate=[0, 0], scale=1.2, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'trans_x':
+            # Simulates a horizontal off-center crop
+            x = TF.affine(img_batch, angle=0.0, translate=[shift_x, 0], scale=1.0, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'trans_y':
+            # Simulates a vertical off-center crop
+            x = TF.affine(img_batch, angle=0.0, translate=[0, shift_y], scale=1.0, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+
+        # Photometric
+        elif op == 'contrast_high':
+            # contrast_factor > 1.0 increases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=1.25)
+        elif op == 'contrast_low':
+            # contrast_factor < 1.0 decreases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=0.75)
+        else:
+            raise ValueError(f"Unknown TTA operation: {op}")
+            
+        # Forward pass and immediate softmax
+        logits = model(x)
+        probs = F.softmax(logits, dim=1)
+        
+        # Accumulate
+        if prob_sum is None:
+            prob_sum = probs
+        else:
+            prob_sum += probs
+            
+    # Average the accumulated probabilities
+    avg_probs = prob_sum / num_ops
+    return avg_probs
+
+def apply_tta_entropy(model, img_batch, tta_operations, temperature=1.0):
+    """
+    Applies TTA operations and aggregates probabilities using an Entropy-Weighted Average.
+    """
+    all_probs = []
+    all_entropies = []
+    
+    for op in tta_operations:
+        # Geometric (Orthogonal)
+        if op == 'identity':
+            x = img_batch
+        elif op == 'hflip':
+            x = torch.flip(img_batch, dims=[3])
+        elif op == 'vflip':
+            x = torch.flip(img_batch, dims=[2])
+        elif op == 'rot90':
+            x = torch.rot90(img_batch, k=1, dims=[2, 3])
+            
+        # Geometric (Non-Orthogonal)
+        elif op == 'rot15':
+            x = TF.rotate(img_batch, angle=15, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot30':
+            x = TF.rotate(img_batch, angle=30, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot45':
+            x = TF.rotate(img_batch, angle=45, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'rot60':
+            x = TF.rotate(img_batch, angle=60, interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        
+        elif op == 'scale_80':
+            # Zoom out by 20%, objects appear smaller, padded with 0
+            x = TF.affine(img_batch, angle=0.0, translate=[0, 0], scale=0.8, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'scale_120':
+            # Zoom in by 20%, objects appear larger, edges are cropped
+            x = TF.affine(img_batch, angle=0.0, translate=[0, 0], scale=1.2, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'trans_x':
+            # Simulates a horizontal off-center crop
+            x = TF.affine(img_batch, angle=0.0, translate=[shift_x, 0], scale=1.0, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+        elif op == 'trans_y':
+            # Simulates a vertical off-center crop
+            x = TF.affine(img_batch, angle=0.0, translate=[0, shift_y], scale=1.0, shear=0.0, 
+                          interpolation=TF.InterpolationMode.BILINEAR, fill=0)
+
+        # Photometric
+        elif op == 'contrast_high':
+            # contrast_factor > 1.0 increases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=1.25)
+        elif op == 'contrast_low':
+            # contrast_factor < 1.0 decreases contrast
+            x = TF.adjust_contrast(img_batch, contrast_factor=0.75)
+        else:
+            raise ValueError(f"Unknown TTA operation: {op}")
+            
+        # Forward pass
+        logits = model(x)
+        probs = F_nn.softmax(logits, dim=1)
+        
+        # Calculate Shannon Entropy: H = -sum(p * log(p))
+        # Add 1e-8 for numerical stability to prevent log(0) yielding NaN
+        entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=1)
+        
+        all_probs.append(probs)
+        all_entropies.append(entropy)
+        
+    # Stack lists into tensors
+    # stacked_probs shape: [num_ops, batch_size, num_classes]
+    stacked_probs = torch.stack(all_probs, dim=0)
+    # stacked_entropies shape: [num_ops, batch_size]
+    stacked_entropies = torch.stack(all_entropies, dim=0)
+    
+    # Compute normalized weights over the num_ops dimension (dim=0)
+    # The negative sign ensures lower entropy (higher confidence) gets a higher weight
+    weights = F_nn.softmax(-stacked_entropies / temperature, dim=0)
+    
+    # Broadcast weights: [num_ops, batch_size] -> [num_ops, batch_size, 1]
+    weights = weights.unsqueeze(-1)
+    
+    # Compute the weighted sum
+    avg_probs = torch.sum(weights * stacked_probs, dim=0)
+    
+    return avg_probs
+
+@torch.no_grad()
+def extract_model_probabilities(model_path, config_path, use_cuda, tmp_testpath=None,tta_operations=None,tta_entropy=False):
+    """
+    Loads a single model from its specific config, runs TTA inference, 
+    and returns a dictionary of filename -> probability tensor.
+    """
+    device = torch.device("cuda" if use_cuda else "cpu")
+    
+    # 1. Load the specific model's configuration
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+        
+    model_name = config["model"]["class"]
+    model_config = config["model"]
+    
+    if tta_operations is None:
+        test_config = config.get("test", {})
+        tta_operations = test_config.get("tta_transforms", ["identity"])
+    
+    print(f"  - Using TTA operations: {tta_operations}")
+    
+    num_classes = 86
+    
+    # 3. Instantiate and load the model
+    if "pretrained_path" in model_config and model_config["pretrained_path"]:
+        actual_model_class = getattr(models.pretrained_models, model_name)
+        model = actual_model_class(
+            pretrained_path=model_config["pretrained_path"],
+            pretrained=False, 
+            num_classes=num_classes, 
+        )
+
+        data_cfg = resolve_data_config(model.pretrained_cfg, model=model.get_backbone())
+        valid_transform = create_transform(**data_cfg, is_training=False)
+        if model_config["pretrained_in_color"]:
+            to_rgb = transforms.Lambda(lambda x: x.convert("RGB"))
+            valid_transform.transforms.insert(0, to_rgb)
+
+            is_Louis = model_config.get("is_Louis",False)
+
+            if is_Louis:
+                valid_transform = [utils.ResizeAndPadToSquare(224)]
+                valid_transform.extend([
+                    transforms.Grayscale(num_output_channels=3), # Duplication du canal pour le CNN [cite: 205, 208]
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                    ])
+                valid_transform = transforms.Compose(valid_transform)
+
+
+        #test loader with valid transforms 
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath, input_transform = valid_transform
+        )
+
+    else:
+
+        #test loader without valid transforms
+        valid_transform = v2.Compose([
+            v2.Grayscale(), 
+            v2.Resize((128, 128), antialias=True),
+            v2.ToImage(), 
+            v2.ToDtype(torch.float32, scale=True),
+        ])
+        test_loader, input_size, num_classes = data.get_test_dataloaders(
+        config, use_cuda, tmp_testpath=tmp_testpath,input_transform=valid_transform
+        )
+
+        actual_model_class = getattr(models.cnn_models, model_name)
+        model = actual_model_class(model_config, input_size, num_classes)
+
+        
+
+    model.load_state_dict(torch.load(model_path,map_location=device, weights_only=True))
+    model.to(device)
+    model.eval()
+
+
+    # 4. Extract Probabilities
+    img_probs = {}
+    for img, filenames in test_loader:
+        img = img.to(device)
+
+        if tta_entropy:
+            print("Applying tta entropy")
+            batch_probs = apply_tta_entropy(model, img, tta_operations)
+        else:
+            batch_probs = apply_tta(model, img, tta_operations)
+        
+        for prob, filename in zip(batch_probs, filenames):
+            # MUST move to CPU to prevent VRAM exhaustion
+            img_probs[filename] = prob.cpu() 
+            
+    # Clean up GPU memory before the next model is loaded
+    del model
+    torch.cuda.empty_cache()
+    
+    return img_probs
+
+
+def test_ensemble(ensemble_config, send_kaggle_bool=True):
+    """
+    Orchestrates the ensemble testing using Dynamic Entropy-Weighted Averaging.
     """
     use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda") if use_cuda else torch.device("cpu")
-    print(f"Device used {device}")
-    print("Yay on utilise la nouvelle fonction de test !")
-
-    model_name = config["model"]["class"]
-    model_path_list = config["test"]["model_path"]
-    
-    if "pretrained_path" in model_config and model_config["pretrained_path"]:
-        csv_base_name = model_config["pretrained_path"].replace("/", "_").replace(":", "_")
-    else:
-        csv_base_name = model_name
-
-    # Hoisted outside the loop
-    save_dir = config["test"]["save_dir"] 
-    
-    for model_path in model_path_list:
-        print(f"We are currently testing the model at {model_path}")
-        unique_save_path = utils.generate_unique_csv(save_dir,csv_base_name)
-        print(f"unique save path is {unique_save_path}")
-        test_loader, input_size, num_classes = data.get_test_dataloaders(config, use_cuda,tmp_testpath=tmp_testpath)
         
-        model_config = config["model"]
+    # Extract and expand top-level OS variables
+    raw_save_dir = ensemble_config.get("save_dir", "${JOB_WORKSPACE}/logs/ensemble")
+    save_dir = os.path.expandvars(raw_save_dir)
+    os.makedirs(save_dir, exist_ok=True)
+    
+    raw_tmp_testpath = ensemble_config.get("tmp_testpath", None)
+    tmp_testpath = os.path.expandvars(raw_tmp_testpath) if raw_tmp_testpath else None
+    
+    test_config = ensemble_config.get("test", {})
+    global_tta = test_config.get("tta_transforms", ["identity"])
+    
+    # NEW: Extract temperature for entropy weighting (default 1.0)
+    temperature = float(test_config.get("ensemble_temperature", 1.0))
 
-        if "pretrained_path" in model_config and model_config["pretrained_path"]:
-            model = timm.create_model(model_config["pretrained_path"], pretrained=False, num_classes=num_classes)
-        else:
-            model_class = getattr(models.cnn_models, model_name)
-            model = model_class(model_config, input_size, num_classes)
+    model_paths = test_config.get("model_path", [])
+    config_paths = test_config.get("model_config_path", [])
+    
+    if len(model_paths) != len(config_paths):
+        raise ValueError(f"Mismatch in ensemble config: found {len(model_paths)} models but {len(config_paths)} configs.")
+    
+    all_models = list(zip(model_paths, config_paths))
+    
+    if not all_models:
+        print("No models found in the ensemble configuration.")
+        return
 
-        model = eval(f"models.cnn_models.{model_name}({model_config} ,{input_size},{num_classes})")
-        model.load_state_dict(torch.load(model_path, weights_only=True))
-        model.to(device)
+    print(f"Starting dynamic entropy-weighted ensemble of {len(all_models)} models...")
+    print(f"Using temperature T={temperature}")
+    
+    ensemble_probs = defaultdict(list)
+    
+    tta_entropy = test_config.get("tta_entropy",False)
 
-        with open(unique_save_path,"w") as file:
-            model.eval()
-            print(f"fichier crée à l'adresse : {unique_save_path}")
-            i = 0
-            file.write("imgname,label \n")
-            for img, filenames in test_loader:
-                img = img.to(device)
-                logits = model(img)
-                preds = torch.argmax(logits,dim=1) 
-                for pred, filename in zip(preds,filenames):
-                    file.write(f"{filename}, {pred.item()} \n")
-                    print(filename)
-                    i += 1
-        print("Fin du test.")
-        if send_kaggle_bool:
-            send_kaggle(unique_save_path)
-    return None
+    # 1. Accumulate predictions
+    for model_path, config_path in all_models:
+        print(f"\nEvaluating: {model_path}")
+        probs_dict = extract_model_probabilities(
+            model_path, config_path, use_cuda, tmp_testpath, tta_operations=global_tta,tta_entropy=tta_entropy
+        )
+        for filename, prob in probs_dict.items():
+            ensemble_probs[filename].append(prob)
+            
+    # 2. Dynamic Entropy Weighting and Output
+    print("\nComputing dynamic entropy weights and writing CSV...")
+    unique_save_path = utils.generate_unique_csv(save_dir, "ensemble_submission")
+    
+    with open(unique_save_path, "w") as file:
+        file.write("imgname,label\n")
+        
+        for filename, probs_list in ensemble_probs.items():
+            # stacked_probs shape: [num_models, num_classes]
+            stacked_probs = torch.stack(probs_list)
+            
+            # Calculate Shannon Entropy per model for this specific image
+            # Shape: [num_models]
+            entropies = -torch.sum(stacked_probs * torch.log(stacked_probs + 1e-8), dim=1)
+            
+            # Compute softmax weights inversely proportional to entropy
+            # Shape: [num_models]
+            weights = F_nn.softmax(-entropies / temperature, dim=0)
+            
+            # Broadcast weights: [num_models] -> [num_models, 1]
+            weights = weights.unsqueeze(1)
+            
+            # Weighted sum across the model dimension (dim=0)
+            # Shape: [num_classes]
+            final_probs = torch.sum(weights * stacked_probs, dim=0)
+            
+            # Extract final prediction
+            final_pred = torch.argmax(final_probs).item()
+            
+            file.write(f"{filename},{final_pred}\n")
+            
+    print(f"Ensemble evaluation complete. File saved to {unique_save_path}")
+    
+    if send_kaggle_bool:
+        send_kaggle(unique_save_path)
 
 def create_sweep(config):
     """

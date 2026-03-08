@@ -17,7 +17,7 @@ parameters:
   data.batch_size:
     value: 512
   data.num_workers:
-    value: 8
+    value: 16
   data.valid_ratio:
     value: 0.2
   data.is_batch_weighted :
@@ -27,24 +27,34 @@ parameters:
   optim.algo:
     value : AdamW
   optim.params.lr:
-    value : 0.00001
+    value : 0.004
   optim.params.weight_decay:
-    value: 0.01
+    value: 0.00
   optim.params.amsgrad:
-    value: True
+    value: False 
 
+  optim.clip_value:
+    value: 1.0
+
+  scheduler.name:
+    value: "cosineannealing"
+
+  scheduler.lr_decay:
+    value: 0.99
     
   loss.lossname:
     value: "CrossEntropyLoss"
   loss.is_weighted:
     value: True
+  loss.is_article_weighted:
+    value: True 
   loss.gamma:
     value: 2
 
 
   
   train.nepochs: 
-    value: 35
+    value: 30
   train.is_weighted:
     value: False #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
   train.test_end_train:
@@ -57,7 +67,7 @@ parameters:
     value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
 
   model.class:
-    value: PollenNet
+    value: PlanktonClassifier
   model.num_layers:
     value: 3
   model.size_linear :
@@ -67,7 +77,7 @@ parameters:
   model.ona100: 
     value : True
   model.pretrained_path:
-    value: 'mobilenetv2_100'
+    value: 'mobilenetv2_140'
   model.pretrained_in_color:
     value: True
   model.freeze_pretrained:

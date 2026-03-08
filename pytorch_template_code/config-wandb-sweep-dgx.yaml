@@ -1,11 +1,11 @@
 #This config is used to test several values 
 
 program: main.py
-name: hyperbandtest
+name: chad  
 project: WinningKaggle
 entity: hugo-debosschere-are-na
 count: 132
-method: random 
+method: bayes 
 metric:
   goal: maximize
   name: f1score
@@ -18,9 +18,9 @@ parameters:
   data.testpath:
     value: '$TMPDIR/dataset/test'
   data.batch_size:
-    value: 64
+    value: 256
   data.num_workers:
-    value: 4
+    value: 16
   data.valid_ratio:
     value: 0.2
   data.is_batch_weighted:
@@ -31,55 +31,50 @@ parameters:
     value : AdamW
   optim.params.lr:
       distribution: log_uniform_values
-      max: 0.1 
-      min : 0.0001
+      max: 0.001 
+      min : 0.00001
   optim.params.weight_decay:
       distribution: log_uniform_values
-      max: 0.5 
+      max: 0.01 
       min : 0.0001
   optim.params.amsgrad:
     values: [True, False]
+  optim.clip_value: 
+    value: 1.0
 
     
   loss.lossname:
-    values: ["FocalLoss","CrossEntropyLoss"]
+    value: "CrossEntropyLoss"
   loss.is_weighted:
-    values: [True, False] 
-  loss.gamma:
-    distribution: uniform
-    max: 5
-    min: 1
-
-
+    values: [False,True]
+  loss.is_article_weighted:
+    values: [True,False] 
   
+  scheduler.name: 
+    value: "cosineannealing"
+
+  scheduler.lr_decay:
+    distribution: uniform
+    max: 1.0 
+    min : 0.97
+
   train.nepochs: 
-    value: 35
-  train.is_weighted:
-    values: [True, False] #if True, the selected loss is called with get_weighted_loss, which gives a stronger loss to rarer samples
+    value: 10
   train.test_end_train:
-    value: True
-  train.nepochs: 
-    value: 1
+    value: False
 
   
   logging.logdir:
-    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/logs # Better to provide the fullpath, especially on the cluster
+    value: ${JOB_WORKSPACE}/logs # Better to provide the fullpath, especially on the cluster
   logging.save_dir:
-    value: /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/test
+    value: ${JOB_WORKSPACE}/logs 
 
 
   
   model.class:
-    values: [PollenNet,VanillaCNN]
-  model.num_layers:
-    values: [3,4,5] 
-  model.size_linear :
-    values: [256,512,1024]
-  model.prob_droupout:
-    min: 0.0 
-    max : 0.99
+    value: PlanktonClassifier
   model.pretrained_path:
-    value: 'mobilenetv2_100'
+    values: ['mobilenetv2_100','mobilenetv2_140','efficientnet_b3.ra2_in1k']
   model.pretrained_in_color:
     value: True 
   model.freeze_pretrained:

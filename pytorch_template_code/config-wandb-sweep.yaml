@@ -42,7 +42,11 @@ parameters:
       min : 0.0001
   optim.params.amsgrad:
     values: [True, False]
+  optim.clip_value: 
+    value: 1.0
 
+  scheduler.name: 
+    value: "cosineannealing"
     
   loss.lossname:
     values: ["FocalLoss","CrossEntropyLoss"]

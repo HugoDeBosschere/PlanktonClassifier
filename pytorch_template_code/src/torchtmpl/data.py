@@ -15,6 +15,7 @@ from torchvision.transforms import v2
 import numpy as np
 import matplotlib.pyplot as plt
 import torchvision.datasets as datasets
+from sklearn.model_selection import train_test_split
 
 
 
@@ -62,6 +63,48 @@ def get_batch_weighted_smart_sampler(base_dataset, batch_size, len_dataset, indi
     return b_sampler
 
 
+class ResizeAndPadToSquare:
+    """
+    Redimensionne le côté le plus long à la taille cible (224), 
+    puis pad le côté le plus court avec la valeur médiane pour obtenir un carré[cite: 204, 206].
+    """
+    def __init__(self, target_size=224):
+        self.target_size = target_size
+
+    def __call__(self, image):
+        w, h = image.size
+        
+        # 1. Redimensionnement homothétique
+        scale = self.target_size / max(w, h)
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        
+        image = image.resize((new_w, new_h), Image.BILINEAR)
+        
+        if new_w == self.target_size and new_h == self.target_size:
+            return image
+            
+        # 2. Extraction des bordures et calcul de la médiane [cite: 206]
+        img_np = np.array(image)
+        if img_np.ndim == 3: # 3 canaux
+            top, bottom = img_np[0, :, :], img_np[-1, :, :]
+            left, right = img_np[:, 0, :], img_np[:, -1, :]
+            borders = np.concatenate([top, bottom, left, right], axis=0)
+            median_val = tuple(np.median(borders, axis=0).astype(int))
+        else: # Niveaux de gris
+            top, bottom = img_np[0, :], img_np[-1, :]
+            left, right = img_np[:, 0], img_np[:, -1]
+            borders = np.concatenate([top, bottom, left, right])
+            median_val = int(np.median(borders))
+
+        # 3. Calcul du padding pour centrer l'image
+        pad_left = (self.target_size - new_w) // 2
+        pad_right = self.target_size - new_w - pad_left
+        pad_top = (self.target_size - new_h) // 2
+        pad_bottom = self.target_size - new_h - pad_top
+        
+        return ImageOps.expand(image, (pad_left, pad_top, pad_right, pad_bottom), fill=median_val)
+
 class DatasetTransformer(torch.utils.data.Dataset):
     def __init__(self, subset, transform):
         self.subset = subset
@@ -87,9 +130,14 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
     # If timm provided the base transforms, inject our custom logic into them
     if train_transform is not None:
         custom_augs = v2.Compose([
-            v2.ElasticTransform(alpha=50.0, sigma=5.0),
-            v2.ColorJitter(brightness=0.2, contrast=0.2),
-            v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0)
+                v2.RandomAffine(
+                degrees=180, 
+                shear=[-15, 15, -15, 15], 
+                interpolation=v2.InterpolationMode.BILINEAR
+            ),
+            #v2.ColorJitter(brightness=0.2, contrast=0.2),
+            #v2.RandomAdjustSharpness(sharpness_factor=1.2, p=0.5),
+            v2.RandomRotation(degrees=180, interpolation=v2.InterpolationMode.BILINEAR)
         ])
         
         if pretrained_in_color:
@@ -110,7 +158,6 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
             v2.Grayscale(), 
             v2.Resize((128, 128), antialias=True),
             v2.RandomHorizontalFlip(p=0.5),
-            v2.ElasticTransform(alpha=50.0, sigma=5.0),
             v2.ColorJitter(brightness=0.2, contrast=0.2),
             v2.RandomAdjustSharpness(sharpness_factor=2.0, p=1.0),
             v2.ToImage(), 
@@ -138,11 +185,17 @@ def get_dataloaders(data_config, use_cuda, train_transform=None, valid_transform
 
     logging.info(f"  - I loaded {len(base_dataset)} samples")
 
-    indices = list(range(len(base_dataset)))
-    random.shuffle(indices)
-    num_valid = int(valid_ratio * len(base_dataset))
-    train_indices = indices[num_valid:]
-    valid_indices = indices[:num_valid]
+    targets = base_dataset.targets
+    indices = np.arange(len(base_dataset))
+
+    # Fractionnement stratifié
+    # random_state=21 assure que vous obtenez le même split à chaque run
+    train_indices, valid_indices = train_test_split(
+        indices,
+        test_size=data_config["valid_ratio"],
+        stratify=targets,
+        random_state=21
+    )
 
     train_subset = torch.utils.data.Subset(base_dataset, train_indices)
     valid_subset = torch.utils.data.Subset(base_dataset, valid_indices)
@@ -227,7 +280,7 @@ class TestDataset(datasets.ImageFolder):
         
         return image, filename
 
-def get_test_dataloaders(config, use_cuda, tmp_testpath=None): 
+def get_test_dataloaders(config, use_cuda, input_transform = None, tmp_testpath=None): 
 
     data_config = config['data']
     batch_size = data_config['batch_size']
@@ -240,11 +293,10 @@ def get_test_dataloaders(config, use_cuda, tmp_testpath=None):
         
     batch_size = data_config["batch_size"]
 
-    
-
-    input_transform = transforms.Compose(
-        [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
-    )
+    if not input_transform:
+        input_transform = transforms.Compose(
+            [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+        )
 
     test_dataset = TestDataset(
         root=test_path,

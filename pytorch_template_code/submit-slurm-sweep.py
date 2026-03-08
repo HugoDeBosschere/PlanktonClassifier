@@ -107,7 +107,7 @@ else:
 if len(sys.argv) == 4:
     func = sys.argv[3]
 else:
-    func = "create_sweep" #calls create sweep when it's not specified
+    func = create_sweep #calls create sweep when it's not specified
 
 # Copy the config in a temporary config file
 os.system("mkdir -p configs")
