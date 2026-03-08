@@ -11,7 +11,7 @@ test:
             ]
     
     model_config_path: [
-                    /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/chadmodel/config.yaml
+                    /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/chadmodel/config.yaml,
                     /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/66mobnet/config.yaml,
                     /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/68mobnet/config.yaml,
                     /raid/home/students/hugodebosschere/deep_learning_2025_2026_debosschere_delaby_huhardeaux/pytorch_template_code/best_models/first_pollenet/config-sample.yaml,
