@@ -20,8 +20,6 @@ Nous avons utilisé des outils d'intelligence artificielle générative à certa
 
 ## Commande
 
-Il est recommandé de lancer ces commandes sur le dgx (et non sur le dce) car les données sont téléchargées sur dans un dossier temporaire avant de lancer l'entrainement / le test, ce qui est très long sur le dce mais rapide sur le dgx
-
 Pour lancer un entrainement isolé (création de sweep automatique pour la visualisation et le logging sur wandb)
 
 ```
@@ -56,5 +54,5 @@ Panaïotis et al. (2026). *Benchmark of plankton images classification: emphasiz
 
 ### Explicative video
 
-You will find a video (in French) explaining and detailing our project what we did and why did it following this link: 
+Vous trouverez une vidéo (en français) expliquant ce que nous avons fait et pourquoi nous l'avons fait à partir de ce lien: 
 https://www.youtube.com/watch?v=1JTjhFDgrtw
